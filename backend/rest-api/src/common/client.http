@@ -1,0 +1,76 @@
+# Авторизация
+
+POST http://localhost:3000/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "phone_number": "+79991683604"
+}
+
+###
+
+POST http://localhost:3000/v1/auth/verify
+Content-Type: application/json
+
+{
+  "phone_number": "+79991683604",
+  "code": "8635" 
+}
+
+###
+
+POST http://localhost:3000/v1/dashboard/products
+Content-Type: application/json
+
+{
+  "brand": "nike",
+  "type": "кроссовки",
+  "title": "Niker Air Jordan 566 DC"
+}
+###
+
+POST http://localhost:3000/v1/dashboard/products/size
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "tag": "EU",
+  "value": "11.2",
+  "length": 1,
+  "width": 12,
+  "height": 12,
+  "weight": 12,
+  "count": 0,
+  "old_price": 1255.33,
+  "current_price": 8993.8898,
+  "in_stock": true
+}
+
+###
+
+POST http://localhost:3000/v1/dashboard/products/photo
+Content-Type: application/json
+
+{
+  "product_id": 0,
+  "photo_id": 0
+}
+
+###
+
+PATCH http://localhost:3000/v1/dashboard/products
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "type": "простата"
+}
+
+###
+
+GET http://localhost:3000/v1/dashboard/products
+  ?page=1
+  &limit=10
+  &filters=types:1,12,3;brands:3,333;values:32,XXL
+  &sort=date:-1
+Content-Type: application/json

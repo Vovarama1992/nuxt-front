@@ -1,0 +1,10 @@
+node_env: "dev"
+
+radis:
+  host: "localhost"
+  port: 6379
+
+auth:
+  jwt:
+    secret: "+f`o`a;s`dija_:'spij2308974u2908!!l;'"
+    expires_in: '120s'
