@@ -19,6 +19,7 @@ import { ProductStatus } from './products.types';
 import { DeleteProductDTO } from './dtos/delete-product.dto';
 import { UpdateProductSizeDTO } from './dtos/update-product-size.dto';
 import { DeleteProductSizeDTO } from './dtos/delete-product-size.dto';
+import { GetProductsQueryParams } from './dtos/get-products-query.dto';
 
 @Injectable()
 export class ProductsService {
@@ -26,6 +27,39 @@ export class ProductsService {
 
   constructor(private readonly prismaService: PrismaService) {
     this.logger = new Logger(ProductsService.name);
+  }
+
+  async getProducts(params: GetProductsQueryParams) {
+    try {
+      const products = await this.prismaService.products.findMany({
+        where: {
+          OR: [
+            ...params.filters.brands.map((id) => ({
+              brand_id: id,
+            })),
+            ...params.filters.types.map((id) => ({
+              type_id: id,
+            })),
+          ],
+        },
+        orderBy: [
+          {
+            created_at: params.sort.date === 1 ? 'asc' : 'desc',
+          },
+        ],
+        skip: params.limit * params.page,
+        take: params.limit,
+      });
+
+      return products;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerErrorException('');
+    }
+  }
+
+  async getProduct(id: number) {
+    return id;
   }
 
   async createProduct(dto: CreateProductDTO) {

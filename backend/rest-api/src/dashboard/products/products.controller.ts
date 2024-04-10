@@ -5,6 +5,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -26,8 +28,12 @@ export class ProductsController {
 
   @Get('')
   async getProducts(@Query() quearyParams: GetProductsQueryParams) {
-    // await this.productsService.getProducts(quearyParams);
-    console.dir(quearyParams, { depth: 4 });
+    await this.productsService.getProducts(quearyParams);
+  }
+
+  @Get(':id')
+  async getProduct(@Param('id', ParseIntPipe) id: number) {
+    await this.productsService.getProduct(id);
   }
 
   @Post('')
