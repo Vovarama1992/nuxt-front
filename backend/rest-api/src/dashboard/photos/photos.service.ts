@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/integrations/prisma/prisma.service';
-// import { CreatePhotoDTO } from './dtos/create-photo.dto';
+// import { writeFile } from 'node:fs/promises';
+// import { v5 as uuidv5 } from 'uuid';
 
 @Injectable()
 export class PhotosService {
@@ -11,9 +12,10 @@ export class PhotosService {
     this.logger = new Logger(PhotosService.name);
   }
 
-  // async createPhoto(dto: CreatePhotoDTO) {
-  //   try {
-  //     await this.prismaService.photos.
-  //   }
-  // }
+  async createPhoto(file: Express.Multer.File) {
+    console.dir(file, { depth: 6 });
+    // try {
+    //   await writeFile(__dirname + '/static/' + uuidv5 + '.' + file.mimetype.);
+    // }
+  }
 }
