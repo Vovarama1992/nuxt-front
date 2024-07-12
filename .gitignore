@@ -10,3 +10,5 @@ backend/telegram-bot/node_modules
 # dummy data and files(?)
 data/
 static/
+
+**/.env
