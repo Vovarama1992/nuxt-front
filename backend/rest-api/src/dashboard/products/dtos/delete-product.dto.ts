@@ -1,6 +1,7 @@
-import { PickType } from '@nestjs/swagger';
-import { UpdateProductDTO } from './update-product.dto';
+import { IsMongoId, IsString } from 'class-validator';
 
-export class DeleteProductDTO extends PickType(UpdateProductDTO, [
-  'product_id',
-] as const) {}
+export class DeleteProductDTO {
+  @IsString()
+  @IsMongoId()
+  product_id: string;
+}

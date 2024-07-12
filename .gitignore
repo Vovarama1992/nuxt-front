@@ -6,3 +6,7 @@ backend/rest-api/logs/*
 
 backend/telegram-bot/dist
 backend/telegram-bot/node_modules
+
+# dummy data and files(?)
+data/
+static/

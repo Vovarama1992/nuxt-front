@@ -1,0 +1,104 @@
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsDefined,
+  IsIn,
+  IsInt,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { ObjectId } from 'mongodb';
+class ProductDTO2 {
+  @IsMongoId()
+  product_id: string;
+
+  @IsMongoId()
+  size_id: string;
+
+  @IsDefined()
+  @IsNumber()
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  quantity: number;
+}
+
+export class ProductDTO {
+  @IsMongoId()
+  product_id: ObjectId;
+  product_title: string;
+  product_brand: string;
+  product_type: string;
+  product_size_grid: string;
+
+  @IsMongoId()
+  size_id: ObjectId;
+  size_title: string;
+  size_price: number;
+
+  @IsNumber()
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  quantity: number;
+}
+
+export class AddressDTO {
+  @IsString()
+  @Length(1, 128)
+  city: string;
+
+  @IsString()
+  @Length(1, 512)
+  address: string;
+}
+
+export class CreateOrderDTO {
+  @IsString()
+  @Length(1, 128)
+  first_name: string;
+
+  @IsString()
+  @Length(1, 128)
+  last_name: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 128)
+  surname?: string;
+
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => AddressDTO)
+  delivery_address: AddressDTO;
+
+  @IsDefined()
+  @IsString()
+  @IsIn(['Экспресс-доставка по Москве', 'СДЭК', 'Доставка Почтой России'])
+  delivery_method:
+    | 'Экспресс-доставка по Москве'
+    | 'СДЭК'
+    | 'Доставка Почтой России';
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 256)
+  message: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 128)
+  promocode?: string;
+
+  @IsDefined()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductDTO2)
+  products: ProductDTO2[];
+}

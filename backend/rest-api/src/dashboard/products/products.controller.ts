@@ -3,96 +3,85 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDTO } from './dtos/create-product.dto';
-import { CreateProductSizeDTO } from './dtos/create-product-size.dto';
-import { CreateProductPhotoDTO } from './dtos/create-product-photo.dto';
-import { CreateProductSimilarDTO } from './dtos/create-product-similar.dto';
-import { UpdateProductDTO } from './dtos/update-product.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { DeleteProductDTO } from './dtos/delete-product.dto';
-import { UpdateProductSizeDTO } from './dtos/update-product-size.dto';
-import { DeleteProductSizeDTO } from './dtos/delete-product-size.dto';
-import { GetProductsQueryParams } from './dtos/get-products-query.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateProductDTO } from './dtos/update-product.dto';
+import { ObjectId } from 'mongodb';
+import { CreateSizeDTO } from './dtos/create-size.dto';
 
 @Controller('dashboard/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @Get('')
-  async getProducts(@Query() quearyParams: GetProductsQueryParams) {
-    await this.productsService.getProducts(quearyParams);
+  async getProducts(
+    @Query('page', ParseIntPipe) page: number,
+    @Query('limit', ParseIntPipe) limit: number,
+  ) {
+    return await this.productsService.getProducts(page, limit);
   }
 
-  @Get(':id')
-  async getProduct(@Param('id', ParseIntPipe) id: number) {
-    await this.productsService.getProduct(id);
-  }
-
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @Post('')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  createProduct(@Body() dto: CreateProductDTO) {
-    this.productsService.createProduct(dto);
+  async createProduct(@Body() dto: CreateProductDTO) {
+    return {
+      product_id: await this.productsService.createProduct(dto),
+    };
   }
 
-  @Patch('')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  updateProduct(@Body() dto: UpdateProductDTO) {
-    this.productsService.updateProduct(dto);
-  }
-
-  @Delete('')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteProduct(@Body() dto: DeleteProductDTO) {
-    this.productsService.deleteProduct(dto);
-  }
-
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @Post('size')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  createProductSize(@Body() dto: CreateProductSizeDTO) {
-    this.productsService.createProductSize(dto);
+  async createProductSize(@Body() dto: CreateSizeDTO) {
+    await this.productsService.createProductSize(dto);
   }
 
-  @Patch('size')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  updateProductSize(@Body() dto: UpdateProductSizeDTO) {
-    this.productsService.updateProductSize(dto);
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Patch('')
+  async updateProduct(@Body() dto: UpdateProductDTO) {
+    await this.productsService.updateProduct(dto);
   }
 
-  @Delete('size')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteProductSize(@Body() dto: DeleteProductSizeDTO) {
-    this.productsService.deleteProductSize(dto);
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Delete('')
+  async deleteProduct(@Body() dto: DeleteProductDTO) {
+    await this.productsService.deleteProduct(dto);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Get(':id')
+  async getProduct(@Param('id') productId: string) {
+    return await this.productsService.getProduct(new ObjectId(productId));
   }
 
   @Post('photo')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  createProductPhoto(@Body() dto: CreateProductPhotoDTO) {
-    this.productsService.createProductPhoto(dto);
-  }
+  @UseInterceptors(FileInterceptor('file'))
+  async createPhoto(@UploadedFile() file: Express.Multer.File) {
+    await this.productsService.saveImage(file);
 
-  @Delete('photo')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteProductPhoto(@Body() dto: DeleteProductSizeDTO) {
-    this.productsService.deleteProductPhoto(dto);
-  }
-
-  @Post('similar')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  createProductSimilar(@Body() dto: CreateProductSimilarDTO) {
-    this.productsService.createProductSimilar(dto);
-  }
-
-  @Delete('similar')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteProductSimilar(@Body() dto: DeleteProductDTO) {
-    this.productsService.deleteProductSimilar(dto);
+    return {
+      title: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    };
   }
 }

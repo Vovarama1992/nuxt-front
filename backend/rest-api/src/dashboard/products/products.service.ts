@@ -1,373 +1,116 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { Collection, MongoClient, ObjectId } from 'mongodb';
+import { Product } from 'src/common/integrations/mongodb/mongodb.interfaces';
+import { DB_CONNECTION } from 'src/common/integrations/mongodb/mongodb.service';
 import { CreateProductDTO } from './dtos/create-product.dto';
-import { PrismaService } from 'src/common/integrations/prisma/prisma.service';
-import {
-  Product_photos,
-  Product_sizes,
-  Products,
-  Similar_products,
-} from '@prisma/client';
-import { CreateProductSizeDTO } from './dtos/create-product-size.dto';
-import { CreateProductPhotoDTO } from './dtos/create-product-photo.dto';
-import { CreateProductSimilarDTO } from './dtos/create-product-similar.dto';
-import { UpdateProductDTO } from './dtos/update-product.dto';
-import { ProductStatus } from './products.types';
 import { DeleteProductDTO } from './dtos/delete-product.dto';
-import { UpdateProductSizeDTO } from './dtos/update-product-size.dto';
-import { DeleteProductSizeDTO } from './dtos/delete-product-size.dto';
-import { GetProductsQueryParams } from './dtos/get-products-query.dto';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { UpdateProductDTO } from './dtos/update-product.dto';
+import { CreateSizeDTO } from './dtos/create-size.dto';
 
 @Injectable()
 export class ProductsService {
-  private logger: Logger;
+  private Products: Collection<Product>;
 
-  constructor(private readonly prismaService: PrismaService) {
-    this.logger = new Logger(ProductsService.name);
-  }
-
-  async getProducts(params: GetProductsQueryParams) {
-    try {
-      const products = await this.prismaService.products.findMany({
-        where: {
-          OR: [
-            ...params.filters.brands.map((id) => ({
-              brand_id: id,
-            })),
-            ...params.filters.types.map((id) => ({
-              type_id: id,
-            })),
-          ],
-        },
-        orderBy: [
-          {
-            created_at: params.sort.date === 1 ? 'asc' : 'desc',
-          },
-        ],
-        skip: params.limit * params.page,
-        take: params.limit,
-      });
-
-      return products;
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException('');
-    }
-  }
-
-  async getProduct(id: number) {
-    return id;
+  constructor(
+    @Inject(DB_CONNECTION)
+    private readonly mongodbService: MongoClient,
+  ) {
+    this.Products = mongodbService.db('3hundred').collection('products');
   }
 
   async createProduct(dto: CreateProductDTO) {
-    const [brandId, typeId, statusId] = await Promise.all([
-      this.getBrandIdByTitle(dto.brand),
-      this.getTypeIdByTitle(dto.type),
-      this.getStatusIdByTitle('HIDDEN'),
-    ]);
+    // const { insertedId } = await this.Products.insertOne({
+    //   _id: new ObjectId(),
+    //   created_at: new Date(),
+    //   title: dto.title,
+    //   brand: dto.brand,
+    //   type: dto.type,
+    //   is_hidden: true,
+    //   in_stock: dto.in_stock,
+    //   is_new: dto.in_new,
+    //   is_sale: dto.in_sale,
+    //   gallery: dto.photos,
+    //   preview: dto.preview,
+    //   size_grid: dto.size_grid,
+    //   package: {
+    //     width: dto.width,
+    //     height: dto.height,
+    //     length: dto.length,
+    //     weight: dto.weight,
+    //   },
+    //   similar_products: [],
+    //   sizes: [],
+    // } as Product);
 
-    try {
-      await this.prismaService.products.create({
-        data: {
-          created_at: new Date(),
-          brand_id: brandId,
-          type_id: typeId,
-          product_status_id: statusId,
-          title: dto.title,
-        } as Products,
-        select: {
-          id: true,
+    return 'insertedId';
+  }
+
+  // TODO: Добавить удаление изображений;
+  async deleteProduct(dto: DeleteProductDTO) {
+    await this.Products.deleteOne({
+      _id: new ObjectId(dto.product_id),
+    });
+  }
+
+  async createProductSize(dto: CreateSizeDTO) {
+    console.log(dto);
+    await this.Products.updateOne(
+      { _id: new ObjectId(dto.product_id) },
+      {
+        $push: {
+          sizes: {
+            _id: new ObjectId(),
+            price: +dto.current_price,
+            quantity: +dto.quantity,
+            title: dto.value,
+          },
         },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'the product could not be created',
-      );
-    }
+      },
+    );
+  }
+
+  async saveImage(file: Express.Multer.File) {
+    await writeFile(join('..', 'static', file.originalname), file.buffer);
+  }
+
+  async getProducts(page: number, limit: number) {
+    const result = await this.Products.find({})
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .toArray();
+
+    console.log(result);
+
+    return result;
+  }
+
+  async getProduct(productId: ObjectId) {
+    return await this.Products.findOne({ _id: productId });
   }
 
   async updateProduct(dto: UpdateProductDTO) {
-    const data: any = {};
+    const { product_id, ...setObj } = dto;
 
-    if (dto.brand) {
-      data.brand_id = await this.getBrandIdByTitle(dto.brand);
-    }
+    delete dto.photos;
+    delete dto.delete_photos;
 
-    if (dto.status) {
-      data.product_status_id = await this.getStatusIdByTitle(dto.status);
-    }
-
-    if (dto.type) {
-      data.type_id = await this.getTypeIdByTitle(dto.type);
-    }
-
-    if (dto.title) {
-      data.title = dto.title;
-    }
-
-    try {
-      await this.prismaService.products.update({
-        data,
-        where: {
-          id: dto.product_id,
-        },
-        select: {
-          id: true,
-        },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException('failed to update the product');
-    }
-  }
-
-  async deleteProduct(dto: DeleteProductDTO) {
-    const statusId = await this.getStatusIdByTitle('DELETED');
-
-    try {
-      await this.prismaService.$transaction(async (tx) => {
-        await tx.products.update({
-          data: {
-            product_status_id: statusId,
-          },
-          where: {
-            id: dto.product_id,
-          },
-          select: {
-            id: true,
-          },
-        });
-
-        await tx.product_photos.deleteMany({
-          where: {
-            product_id: dto.product_id,
-          } as Product_photos,
-        });
-
-        await tx.similar_products.deleteMany({
-          where: {
-            OR: [
-              {
-                product_id: dto.product_id,
-              },
-              {
-                similar_product_id: dto.product_id,
-              },
-            ],
-          },
-        });
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'the product could not be deleted',
-      );
-    }
-  }
-
-  async createProductSize(dto: CreateProductSizeDTO) {
-    try {
-      await this.prismaService.product_sizes.create({
-        data: dto as Product_sizes,
-        select: { id: true },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException('failed to add size');
-    }
-  }
-
-  async updateProductSize(dto: UpdateProductSizeDTO) {
-    const { product_id, ...updateDTO } = dto;
-
-    try {
-      await this.prismaService.product_sizes.update({
-        select: {
-          id: true,
-        },
-        data: updateDTO,
-        where: {
-          id: product_id,
-        },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new Error('the size of the product could not be changed');
-    }
-  }
-
-  async deleteProductSize(dto: DeleteProductSizeDTO) {
-    try {
-      await this.prismaService.product_sizes.delete({
-        where: {
-          id: dto.product_size_id,
-        },
-        select: {
-          id: true,
-        },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'The product size could not be deleted',
-      );
-    }
-  }
-
-  async createProductPhoto(dto: CreateProductPhotoDTO) {
-    try {
-      await this.prismaService.product_photos.create({
-        data: dto as Product_photos,
-        select: { id: true },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException('failed to add photo');
-    }
-  }
-
-  async deleteProductPhoto(dto: DeleteProductSizeDTO) {
-    try {
-      await this.prismaService.product_photos.delete({
-        where: {
-          id: dto.product_size_id,
-        },
-        select: {
-          id: true,
-        },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'The product photo could not be deleted',
-      );
-    }
-  }
-
-  async createProductSimilar(dto: CreateProductSimilarDTO) {
-    try {
-      await this.prismaService.similar_products.create({
-        data: dto as Similar_products,
-        select: { id: true },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException('failed to add similar product');
-    }
-  }
-
-  async deleteProductSimilar(dto: DeleteProductDTO) {
-    try {
-      await this.prismaService.similar_products.deleteMany({
-        where: {
-          OR: [
-            { product_id: dto.product_id },
-            { similar_product_id: dto.product_id },
-          ],
-        },
-      });
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'The product size could not be deleted',
-      );
-    }
-  }
-
-  private async getBrandIdByTitle(title: string): Promise<number> {
-    try {
-      let brand = await this.prismaService.brands.findUnique({
-        where: {
-          title: title,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!brand) {
-        brand = await this.prismaService.brands.create({
-          data: {
-            title,
-          },
-          select: {
-            id: true,
-          },
-        });
-      }
-
-      return brand.id;
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'the product could not be created',
-      );
-    }
-  }
-
-  private async getTypeIdByTitle(title: string): Promise<number> {
-    try {
-      let type = await this.prismaService.types.findUnique({
-        where: {
-          title: title,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!type) {
-        type = await this.prismaService.types.create({
-          data: {
-            title,
-          },
-          select: {
-            id: true,
-          },
-        });
-      }
-
-      return type.id;
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'the product could not be created',
-      );
-    }
-  }
-
-  private async getStatusIdByTitle(title: ProductStatus): Promise<number> {
-    try {
-      let status = await this.prismaService.product_statuses.findUnique({
-        where: {
-          title: title,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!status) {
-        status = await this.prismaService.product_statuses.create({
-          data: {
-            title,
-          },
-          select: {
-            id: true,
-          },
-        });
-      }
-
-      return status.id;
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        'the product could not be created',
-      );
-    }
+    await this.Products.updateOne(
+      { _id: new ObjectId(product_id) },
+      {
+        // $set: setObj,
+        // $push: {
+        //   gallery: {
+        //     $each: photos,
+        //   },
+        // },
+        // $pull: {
+        //   gallery: {
+        //     $in: delete_photos,
+        //   } as FilterOperations<PhotoDTO>,
+        // },
+      },
+    );
   }
 }

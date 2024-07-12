@@ -1,15 +1,26 @@
-version: "3"
+version: "3.9"
 services:
-  postgres:
-    image: postgres
-    restart: always
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "29001:27017"
+    volumes:
+      - "./data/mongodb:/data/db"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      MONGO_INITDB_ROOT_USERNAME: "shop300"
+      MONGO_INITDB_ROOT_PASSWORD: "bAsShu832kmnsAkdI_jsa"
+      MONGO_INITDB_DATABASE: 3hundred
   redis:
-    image: redis
-    restart: always
+    image: "redis"
+    restart: "always"
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+  rabitmq:
+    image: "rabbitmq"
+    restart: "always"
+    environment:
+      RABBITMQ_DEFAULT_USER: "root"
+      RABBITMQ_DEFAULT_PASS: "Sprinter228"
+    ports:
+      - "5672:5672"

@@ -1,0 +1,29 @@
+:root {
+
+  --pry-h: 0;
+  --pry-s: 0%;
+  --pry-l: 0%;
+
+  --sdry-h: 0;
+  --sdry-s: 0%;
+  --sdry-l: 95%;
+
+  --dgr-h: 349;
+  --dgr-s: 100%;
+  --dgr-l: 57%;
+
+
+  --color-primary: hsl(var(--pry-h), var(--pry-s), var(--pry-l));
+  --color-light: hsl(0, 0%, 100%);
+  --color-secondary: hsl(var(--sdry-h), var(--sdry-s), var(--sdry-l));
+  --color-danger: hsl(var(--dgr-h), var(--dgr-s), var(--dgr-h));
+
+  --text-color-primary: var(--color-primary);
+  --text-color-secondary: hsl(var(--sdry-h), var(--sdry-s), calc(var(--sdry-l) - 46%));
+
+  --fill-color-dark: var(--color-primary);
+  --fill-color-primary: var(--color-light);
+  --fill-color-secondary: var(--color-secondary);
+  --fill-color-danger: var(--color-danger);
+  --fill-color-disabled: hsl(var(--sdry-h), var(--sdry-s), calc(var(--sdry-l) - 5%));
+}
