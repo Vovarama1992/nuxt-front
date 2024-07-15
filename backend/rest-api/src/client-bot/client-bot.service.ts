@@ -35,7 +35,7 @@ export class ClientBotService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     const redisInstance = new IORedis(process.env.REDIS_URL);
-    const storage = new RedisAdapter({ instance: redisInstance });
+    const storage = new RedisAdapter<any>({ instance: redisInstance });
     this.serviceAPI = new ServiceAPI();
     this.telegramAPI = new TelegramAPI();
     this.bot = new Bot<ParseModeFlavor<IAppContext>>(
@@ -73,12 +73,20 @@ export class ClientBotService implements OnApplicationBootstrap {
     return this.bot;
   }
 
-  private async init() {
-    this.commands = [new StartCommand(this.bot, this.serviceAPI)];
+  async getFileURL(file_id: string) {
+    const { file_path } = await this.bot.api.getFile(file_id);
+    if (!file_path)
+      throw new Error("couldn't get file_path for given file_id");
+    return `https://api.telegram.org/file/bot${this.bot.token}/${file_path}`;
+  }
 
-    for (const command of this.commands) {
-      command.handle();
-    }
+  private async init() {
+    this.commands = [
+      new StartCommand(this.bot, this.serviceAPI)
+    ];
+
+    for (const command of this.commands)
+      this.bot.command(command.name, command.handle);
 
     this.bot.start();
   }

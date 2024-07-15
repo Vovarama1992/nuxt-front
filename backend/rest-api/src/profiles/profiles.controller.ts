@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Req,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -38,6 +39,14 @@ export class ProfilesController {
     return {
       name: await this.profilesService.getName(new ObjectId(id))
     };
+  }
+
+  @Get('info/avatar/:id')
+  async getAvatar(@Param('id') id: string) {
+    const buffer = await this.profilesService.getAvatar(new ObjectId(id));
+    return new StreamableFile(buffer, {
+      type: 'image/jpeg'
+    });
   }
 
   @Roles('user', 'admin')

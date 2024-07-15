@@ -21,6 +21,8 @@ const { format } = new Intl.NumberFormat('ru', {
 
 export const usePriceFormat = (price: number): string => format(price);
 
+const PROFILE_PICTURE_MAX_AGE = 60 * 60 * 1000;
+
 @Injectable()
 export class ProfilesService {
   private Profiles: Collection<Profile>;
@@ -210,9 +212,58 @@ ${textOrder}
 
     const chat = await this.clientBotService
       .getBot()
-      .api.getChat(parseInt(telegram_id.toString()));
+      .api.getChat(Number(telegram_id));
 
     return chat.username || chat.first_name + chat.last_name;
+  }
+
+  // XXX: later download avatar from Telegram and serve it from the disk instead!
+  // this currently serves as a mirror from Telegram to the website, but Figma mockups
+  // show that there is an edit button for the avatar
+  async getAvatar(id: ObjectId, force = false) {
+    const profile = await this.Profiles.findOne(
+      { _id: id },
+      {
+        projection: {
+          telegram_id: 1,
+          profile_picture: 1,
+          last_fetched_profile_picture: 1
+        },
+      },
+    );
+
+    const now = Date.now();
+    let url = profile.profile_picture;
+    if (force || !profile.last_fetched_profile_picture || now - profile.last_fetched_profile_picture > PROFILE_PICTURE_MAX_AGE) {
+      const bot = this.clientBotService.getBot();
+      const profilePictures = await bot.api.getUserProfilePhotos(Number(profile.telegram_id));
+
+      if (profilePictures.total_count === 0)
+        return null;
+
+      const profilePicture = profilePictures.photos[0];
+      url = await this.clientBotService.getFileURL(profilePicture[0].file_id);
+
+      await this.Profiles.updateOne(
+        { _id: id },
+        {
+          $set: {
+            profile_picture: url,
+            last_fetched_profile_picture: now
+          }
+        }
+      );
+    }
+
+    try {
+      const response = await fetch(url);
+      return Buffer.from(await response.arrayBuffer());
+    } catch (err) {
+      if (force)
+        return null;
+
+      return this.getAvatar(id, true);
+    }
   }
 
   async getAddresses(profileId: ObjectId) {

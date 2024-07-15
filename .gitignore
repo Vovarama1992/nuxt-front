@@ -1,14 +1,11 @@
-# compiled output
 backend/rest-api/dist
-backend/rest-api/node_modules
 backend/rest-api/build
+backend/telegram-bot/dist
+
+**/node_modules/
+**/.nuxt/
+**/.env
 backend/rest-api/logs/*
 
-backend/telegram-bot/dist
-backend/telegram-bot/node_modules
-
-# dummy data and files(?)
 data/
 static/
-
-**/.env

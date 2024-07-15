@@ -6,11 +6,24 @@ const token = useCookie('access_token');
 
 const { isMobile } = useDevice();
 
-const a = () => {
+const toProfile = () => {
   // location.href = '/profile'
   if (isMobile) return navigateTo('/profile')
   return navigateTo('/profile/orders')
 }
+
+const avatar = ref<HTMLImageElement>();
+
+onMounted(() => {
+  const unrefAvatar = unref(avatar);
+  if (!unrefAvatar) return;
+
+  const profileId = useSelfProfileId();
+  if (!profileId) return;
+
+  unrefAvatar.src = "http://localhost:8080/v1/profile/info/avatar/" + profileId;
+  unrefAvatar.addEventListener('error', () => unrefAvatar.src = '/3hundred.jpeg', { once: true });
+});
 </script>
 
 <template>
@@ -42,7 +55,8 @@ const a = () => {
 
   <!-- <button v-else @click="a()" class="header-btn header-btn_preview" :style="{backgroundImage: `url(http://localhost:8080/v1/profile/info/photo/${jwtDecode(useCookie('access_token').value).profileId})`}">
   </button> -->
-  <button v-else @click="a()" class="header-btn header-btn_preview">
+  <button v-else @click="toProfile()" class="header-btn header-btn_preview">
+    <img ref="avatar">
   </button>
 </template>
 
@@ -65,7 +79,10 @@ const a = () => {
     border: 2px solid rgb(209, 209, 209);
     background-size: cover;
     background-position: center;
-    background-image: url('/3hundred.jpeg');
+    position: relative;
+    overflow: hidden;
+
+    > img { width: 100%; height: 100%; }
   }
 
   &:hover svg {

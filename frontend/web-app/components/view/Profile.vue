@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 
 const listElements = [
   {
@@ -62,11 +62,25 @@ const listElements = [
   },
 ];
 
-const { name } = await $fetch<{name: string}>(`http://localhost:8080/v1/profile/info/name/${jwtDecode(useCookie("access_token").value).profileId}`);
+const accessToken = useCookie("access_token");
+const profileId = useSelfProfileId();
+
+const name = ref("");
+const image = ref<HTMLImageElement>();
+
+const response = await $fetch<{name: string}>("http://localhost:8080/v1/profile/info/name/" + profileId);
+name.value = response.name;
+
+onMounted(() => {
+  const unrefImage = unref(image);
+  if (!unrefImage || !profileId) return;
+
+  unrefImage.src = "http://localhost:8080/v1/profile/info/avatar/" + profileId;
+  unrefImage.addEventListener('error', () => unrefImage.src = '/3hundred.jpeg', { once: true });
+});
 
 function logout() {
-  const token = useCookie("access_token");
-  token.value = null;
+  accessToken.value = null;
   navigateTo("/");
 }
 </script>
@@ -107,7 +121,7 @@ function logout() {
                   stroke-linejoin="round"
                 />
               </svg>
-  
+
               Выйти
             </ui-btn>
           </div>
@@ -118,7 +132,7 @@ function logout() {
     <div class="page">
       <div>
         <div class="preview-container">
-          <div class="preview"></div>
+          <img class="preview" ref="image" />
           <span
             style="
               font-weight: 400;
@@ -131,9 +145,9 @@ function logout() {
             Здравствуйте,<br>{{ name }}!
           </span>
         </div>
-  
+
         <app-ball-card style="margin-top: 1.9rem; margin-bottom: 1.9rem" />
-  
+
         <template v-for="el in listElements" :key="el.title">
           <div
             @click="navigateTo(el.to)"
@@ -145,7 +159,7 @@ function logout() {
           </div>
         </template>
       </div>
-  
+
       <div>
         <slot />
       </div>
@@ -185,10 +199,14 @@ function logout() {
   height: 6.8rem;
   border-radius: 50%;
   background-color: #f3f3f3;
-  background-size: cover;
-  background-position: center;
   border: 2px solid #f3f3f3;
-  background-image: url("/3hundred.jpeg");
+  position: relative;
+  overflow: hidden;
+
+  > img {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .list-block {

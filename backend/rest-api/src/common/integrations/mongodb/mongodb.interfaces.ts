@@ -23,6 +23,8 @@ export interface Profile {
   orders: ObjectId[];
   addresses: { city: string; address: string }[];
   promocode?: string;
+  profile_picture?: string;
+  last_fetched_profile_picture?: number;
   scores: {
     quantity: number;
     history: {
