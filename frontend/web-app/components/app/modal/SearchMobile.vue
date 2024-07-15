@@ -19,7 +19,7 @@ const { data, execute } = useFetch<{
     total_items: number;
     total_page: number;
   };
-}>("http://localhost:8080/v1/search", {
+}>("https://api.3hundred.ru/v1/search", {
   query: {
     text,
     page: 1,

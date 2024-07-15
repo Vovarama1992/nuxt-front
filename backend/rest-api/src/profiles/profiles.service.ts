@@ -201,7 +201,7 @@ ${textOrder}
   }
 
   async getName(id: ObjectId) {
-    const { telegram_id } = await this.Profiles.findOne(
+    const profile = await this.Profiles.findOne(
       { _id: id },
       {
         projection: {
@@ -210,9 +210,12 @@ ${textOrder}
       },
     );
 
+    if (!profile)
+      return null;
+
     const chat = await this.clientBotService
       .getBot()
-      .api.getChat(Number(telegram_id));
+      .api.getChat(Number(profile.telegram_id));
 
     return chat.username || chat.first_name + chat.last_name;
   }
@@ -231,6 +234,8 @@ ${textOrder}
         },
       },
     );
+    if (!profile)
+      return null;
 
     const now = Date.now();
     let url = profile.profile_picture;

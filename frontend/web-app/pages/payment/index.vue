@@ -29,7 +29,7 @@ const promocode = ref('');
 
 const createOrder = async () => {
   try {
-    const result = await $fetch('http://localhost:8080/v1/order', {
+    const result = await $fetch('https://api.3hundred.ru/v1/order', {
       method: 'post',
       headers: {
         Authorization: 'Bearer ' + useCookie('access_token').value,

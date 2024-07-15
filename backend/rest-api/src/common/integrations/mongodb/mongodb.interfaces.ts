@@ -109,12 +109,12 @@ export interface Order {
   created_at: Date;
   status:
     | 'created'
-    | 'rejected'
     | 'paid'
-    | 'delivered'
+    | 'on_its_way'
     | 'completed'
-    | 'refaund'
-    | 'returned';
+    | 'completed_refaund'
+    | 'rejected'
+    | 'refaund';
   comment?: string;
 
   total_amount: number;

@@ -17,7 +17,7 @@ const discountSum = ref((props.price / 100) * props.discount);
 <template>
   <div class="product-card-stroke">
     <div class="product-card-stroke__preview">
-      <img :src="`http://localhost:8080/${preview}`" />
+      <img :src="`https://api.3hundred.ru/${preview}`" />
     </div>
 
     <div class="product-card-stroke__control">

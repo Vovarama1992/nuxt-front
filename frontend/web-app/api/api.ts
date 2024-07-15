@@ -1,4 +1,4 @@
-const uri = "http://localhost:8080/v1";
+const uri = "https://api.3hundred.ru/v1";
 
 export const getProductsByIds = async (body: {_id: string, size_id: string}[]) => {
   const { data, pending, error, refresh } = await useFetch<

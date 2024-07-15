@@ -23,7 +23,7 @@ import { OrderModule } from './order/order.module';
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', '..', 'static'),
+      rootPath: join(__dirname, '..', '..', 'static'),
       exclude: ['/v1/(.*)'],
     }),
     ProductsModule,

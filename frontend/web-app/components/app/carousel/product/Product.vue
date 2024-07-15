@@ -29,7 +29,7 @@ const slide = ref(0);
           "
         >
           <q-img
-            :src="'http://localhost:8080/' + img"
+            :src="'https://api.3hundred.ru/' + img"
             fit="contain"
             style="width: 100%; position: relative"
           />
@@ -150,7 +150,7 @@ const slide = ref(0);
         <q-img
           v-for="(img, i) in images"
           :key="img"
-          :src="'http://localhost:8080/' + img"
+          :src="'https://api.3hundred.ru/' + img"
           :ratio="16 / 9"
           :style="slide === i ? { opacity: 1 } : { opacity: 0.5 }"
           @click="() => (slide = i)"

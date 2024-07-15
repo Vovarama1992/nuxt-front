@@ -137,7 +137,7 @@ const slide = ref(0);
               <q-img
                 @click="navigateTo(`/products/${_id}`)"
                 style="max-width: 100%; height: 100%; border-radius: 1rem"
-                :src="`http://localhost:8080/${img}`"
+                :src="`https://api.3hundred.ru/${img}`"
                 fit="cover"
               />
             </q-carousel-slide>

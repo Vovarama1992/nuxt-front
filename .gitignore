@@ -2,6 +2,11 @@ backend/rest-api/dist
 backend/rest-api/build
 backend/telegram-bot/dist
 
+frontend/web-app/.output
+frontend/web-app/.nuxt
+frontend/dashboard-web-app/.output
+frontend/dashboard-web-app/.nuxt
+
 **/node_modules/
 **/.nuxt/
 **/.env

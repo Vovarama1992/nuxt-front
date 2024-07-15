@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { jwtDecode } from "jwt-decode";
+import ColorThief from "colorthief";
 import type { QImg } from "quasar";
 
 const balls = ref(0);
@@ -10,7 +10,7 @@ try {
     scores: {
       quantity: number;
     };
-  }>("http://localhost:8080/v1/profile/scores", {
+  }>("https://api.3hundred.ru/v1/profile/scores", {
     headers: {
       Authorization: "Bearer " + useCookie("access_token").value,
     },
@@ -27,7 +27,7 @@ const colorStop = ref<SVGStopElement>();
 const name = ref("");
 const image = ref<QImg>();
 
-const response = await $fetch<{name: string}>("http://localhost:8080/v1/profile/info/name/" + profileId);
+const response = await $fetch<{name: string}>("https://api.3hundred.ru/v1/profile/info/name/" + profileId);
 name.value = response.name;
 
 async function colorize() {
@@ -40,15 +40,26 @@ async function colorize() {
   const domImage = unrefImage.$el.querySelector("img");
   if (!domImage) return;
 
-  const canvas = new OffscreenCanvas(1, 1);
-  const context = canvas.getContext("2d");
-  if (!context) return;
+  const colorThief = new ColorThief();
+  const colors = colorThief.getPalette(domImage);
+  if (!colors) return;
 
-  context.drawImage(domImage, 0, 0, 1, 1);
+  let color = [ 0, 0, 0 ];
+  for (const imageColor of colors) {
+    // http://alienryderflex.com/hsp.html
+    const hsp = Math.sqrt(
+      0.299 * imageColor[0] ** 2 +
+      0.587 * imageColor[1] ** 2 +
+      0.114 * imageColor[2] ** 2
+    );
 
-  const { data } = context.getImageData(0, 0, 1, 1);
-  const rgba = `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3]})`;
-  unrefColorStop.setAttribute("stop-color", rgba);
+    if (hsp <= 127.5) {
+      color = imageColor;
+      break;
+    }
+  }
+
+  unrefColorStop.setAttribute('stop-color', `rgb(${color.join(',')})`);
 }
 
 function logout() {
@@ -146,7 +157,7 @@ function logout() {
         "
         crossorigin="anonymous"
         error-src="/3hundred.jpeg"
-        :src="'http://localhost:8080/v1/profile/info/avatar/' + profileId"
+        :src="'https://api.3hundred.ru/v1/profile/info/avatar/' + profileId"
 
         ref="image"
         @load="colorize"

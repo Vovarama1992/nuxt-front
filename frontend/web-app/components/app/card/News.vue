@@ -26,7 +26,7 @@ function formatDate(date) {
 
 <template>
   <div class="news-card" @click="navigateTo('/news/'+_id)">
-    <img :src="`http://localhost:8080/${preview}`" :alt="title" />
+    <img :src="`https://api.3hundred.ru/${preview}`" :alt="title" />
 
     <div class="news-card__caption">
       <p

@@ -10,7 +10,7 @@ const result = await $fetch<{
   text: string;
   to: string;
   btnTitle: string;
-}>("http://localhost:8080/v1/search/news/" + route.path.split("/").at(-1));
+}>("https://api.3hundred.ru/v1/search/news/" + route.path.split("/").at(-1));
 
 function formatDate(date: any) {
   const formatter = new Intl.DateTimeFormat("ru-RU", {
@@ -42,7 +42,7 @@ const { isMobile} = useDevice();
   
       <img
         class="post__preview"
-        :src="'http://localhost:8080/' + result.preview"
+        :src="'https://api.3hundred.ru/' + result.preview"
         :alt="result.title"
       />
   
@@ -54,7 +54,7 @@ const { isMobile} = useDevice();
         <img
           v-if="result.photos.length"
           class="post__preview"
-          :src="'http://localhost:8080/' + result.photos[i]"
+          :src="'https://api.3hundred.ru/' + result.photos[i]"
         />
       </template>
   

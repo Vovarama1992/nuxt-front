@@ -30,13 +30,13 @@ const brandFilters = ref<string[]>([]);
 const vars = ref<Vars>([]);
 
 try {
-  const result = await $fetch<Vars>("http://localhost:8080/v1/products/vars");
+  const result = await $fetch<Vars>("https://api.3hundred.ru/v1/products/vars");
   vars.value = result;
 } catch (err) {}
 
 const { data, error, refresh } = await useFetch<Products>(
   computed(() => {
-    const baseURL = `http://localhost:8080/v1/products/page/${
+    const baseURL = `https://api.3hundred.ru/v1/products/page/${
       route.query.page || 1
     }`;
     const u = new URL(baseURL);

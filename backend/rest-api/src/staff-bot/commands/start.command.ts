@@ -26,7 +26,7 @@ export class StartCommand extends Command {
             [
               InlineKeyboard.url(
                 'Войти',
-                `https://3hundred.ru/sign-in/${
+                `https://dashboard.3hundred.ru/sign-in/${
                   (await this.serviceAPI.signIn(ctx.from.id)).code
                 }`,
               ),

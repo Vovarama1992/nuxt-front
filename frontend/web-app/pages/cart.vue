@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const cart = useCartStore();
 const { isMobile } = useDevice();
-const { data } = await useFetch("http://localhost:8080/v1/products", {
+const { data } = await useFetch("https://api.3hundred.ru/v1/products", {
   server: false,
   method: "POST",
   body: {

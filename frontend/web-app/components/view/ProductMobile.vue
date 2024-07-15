@@ -6,7 +6,7 @@ const favorites = useFavoritesStore();
 const productId = route.path.split("/").at(-1) as string;
 
 const { data, pending, error, refresh } = await useFetch<any>(
-  `http://localhost:8080/v1/products/${productId}`
+  `https://api.3hundred.ru/v1/products/${productId}`
 );
 
 const currentSize = ref(
@@ -16,7 +16,7 @@ const currentSize = ref(
 const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
 
 const cards = await useFetch<any>(
-  `http://localhost:8080/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
+  `https://api.3hundred.ru/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
 );
 </script>
 
@@ -97,7 +97,7 @@ const cards = await useFetch<any>(
 
     <app-carousel-product-mobile
       style="box-shadow: 0 4px 70px 0 rgba(0, 0, 0, 0.15)"
-      :images="['http://localhost:8080/' + data.preview, ...data.photos.map((el: any) => 'http://localhost:8080/' + el)]"
+      :images="['https://api.3hundred.ru/' + data.preview, ...data.photos.map((el: any) => 'https://api.3hundred.ru/' + el)]"
     />
 
     <div style="width: min(95%, 1025px); margin: auto; margin-bottom: 2.7rem">

@@ -10,7 +10,7 @@ const result = await $fetch<{
   text: string;
   to: string;
   btnTitle: string;
-}>('http://localhost:8080/v1/search/news/' + route.path.split('/').at(-1));
+}>('https://api.3hundred.ru/v1/search/news/' + route.path.split('/').at(-1));
 
 function formatDate(date: any) {
   const formatter = new Intl.DateTimeFormat("ru-RU", {
@@ -33,7 +33,7 @@ const textBlocks = result.text.split("{{image}}");
 </script>
 
 <template>
-  <img class="post__preview" :src="'http://localhost:8080/' + result.preview" :alt="result.title" />
+  <img class="post__preview" :src="'https://api.3hundred.ru/' + result.preview" :alt="result.title" />
 
   <h1 class="post__title">{{ result.title }}</h1>
   <p class="post__date">{{ formatDate(new Date(result.created_at)) }}</p>
@@ -43,7 +43,7 @@ const textBlocks = result.text.split("{{image}}");
   <template v-for="(block, i) in textBlocks">
     <p class="post__text" v-html="block"></p>
 
-    <img v-if="result.photos.length" class="post__preview" :src="'http://localhost:8080/' + result.photos[i]" />
+    <img v-if="result.photos.length" class="post__preview" :src="'https://api.3hundred.ru/' + result.photos[i]" />
   </template>
 
   <div style="display: flex; justify-content: center; padding: 0 1.1rem;">

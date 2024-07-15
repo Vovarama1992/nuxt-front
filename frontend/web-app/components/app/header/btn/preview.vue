@@ -21,7 +21,7 @@ onMounted(() => {
   const profileId = useSelfProfileId();
   if (!profileId) return;
 
-  unrefAvatar.src = "http://localhost:8080/v1/profile/info/avatar/" + profileId;
+  unrefAvatar.src = "https://api.3hundred.ru/v1/profile/info/avatar/" + profileId;
   unrefAvatar.addEventListener('error', () => unrefAvatar.src = '/3hundred.jpeg', { once: true });
 });
 </script>
@@ -53,7 +53,7 @@ onMounted(() => {
     </svg>
   </button>
 
-  <!-- <button v-else @click="a()" class="header-btn header-btn_preview" :style="{backgroundImage: `url(http://localhost:8080/v1/profile/info/photo/${jwtDecode(useCookie('access_token').value).profileId})`}">
+  <!-- <button v-else @click="a()" class="header-btn header-btn_preview" :style="{backgroundImage: `url(https://api.3hundred.ru/v1/profile/info/photo/${jwtDecode(useCookie('access_token').value).profileId})`}">
   </button> -->
   <button v-else @click="toProfile()" class="header-btn header-btn_preview">
     <img ref="avatar">

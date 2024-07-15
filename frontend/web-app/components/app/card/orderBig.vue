@@ -117,7 +117,7 @@ const statuses = [
           style="height: 18.9rem"
           v-for="preview in previews.splice(0, 3)"
           :key="preview"
-          :src="`http://api.3hundred.ru/` + preview"
+          :src="`https://api.3hundred.ru/` + preview"
         />
       </div>
     </div>

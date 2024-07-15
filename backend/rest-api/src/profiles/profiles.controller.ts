@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -36,14 +37,21 @@ export class ProfilesController {
 
   @Get('info/name/:id')
   async getName(@Param('id') id: string) {
-    return {
-      name: await this.profilesService.getName(new ObjectId(id))
-    };
+    const name = await this.profilesService.getName(new ObjectId(id));
+
+    if (!name)
+      throw new NotFoundException();
+
+    return { name };
   }
 
   @Get('info/avatar/:id')
   async getAvatar(@Param('id') id: string) {
     const buffer = await this.profilesService.getAvatar(new ObjectId(id));
+
+    if (!buffer)
+      throw new NotFoundException();
+
     return new StreamableFile(buffer, {
       type: 'image/jpeg'
     });

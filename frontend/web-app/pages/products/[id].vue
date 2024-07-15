@@ -5,7 +5,7 @@ const favorites = useFavoritesStore();
 const productId = route.path.split("/").at(-1) as string;
 
 const { data, pending, error, refresh } = await useFetch<any>(
-  `http://localhost:8080/v1/products/${productId}`
+  `https://api.3hundred.ru/v1/products/${productId}`
 );
 
 const currentSize = ref(
@@ -15,7 +15,7 @@ const currentSize = ref(
 const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
 
 const cards = await useFetch<any>(
-  `http://localhost:8080/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
+  `https://api.3hundred.ru/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
 );
 const {isMobile} = useDevice();
 </script>

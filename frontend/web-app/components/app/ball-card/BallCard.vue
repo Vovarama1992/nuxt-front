@@ -7,7 +7,7 @@ try {
     scores: {
       quantity: number;
     };
-  }>('http://localhost:8080/v1/profile/scores', {
+  }>('https://api.3hundred.ru/v1/profile/scores', {
     headers: {
       Authorization: 'Bearer ' + useCookie('access_token').value,
     },

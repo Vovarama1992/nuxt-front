@@ -68,14 +68,14 @@ const profileId = useSelfProfileId();
 const name = ref("");
 const image = ref<HTMLImageElement>();
 
-const response = await $fetch<{name: string}>("http://localhost:8080/v1/profile/info/name/" + profileId);
+const response = await $fetch<{name: string}>("https://api.3hundred.ru/v1/profile/info/name/" + profileId);
 name.value = response.name;
 
 onMounted(() => {
   const unrefImage = unref(image);
   if (!unrefImage || !profileId) return;
 
-  unrefImage.src = "http://localhost:8080/v1/profile/info/avatar/" + profileId;
+  unrefImage.src = "https://api.3hundred.ru/v1/profile/info/avatar/" + profileId;
   unrefImage.addEventListener('error', () => unrefImage.src = '/3hundred.jpeg', { once: true });
 });
 

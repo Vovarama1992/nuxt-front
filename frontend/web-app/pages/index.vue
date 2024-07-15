@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { data } = await useFetch<any[]>(
-  "http://localhost:8080/v1/products/collections"
+  "https://api.3hundred.ru/v1/products/collections"
 );
 </script>
 

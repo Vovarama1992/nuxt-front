@@ -22,7 +22,7 @@ provide('cards', cards);
 
 onMounted(async () => {
   if (process.client) {
-    const result = await $fetch<Cards>("http://localhost:8080/v1/products/group", {
+    const result = await $fetch<Cards>("https://api.3hundred.ru/v1/products/group", {
       method: "post",
       body: {
         products_id: favorites.$state.favorites,

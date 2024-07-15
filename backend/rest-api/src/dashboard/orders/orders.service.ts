@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Collection, MongoClient, ObjectId } from 'mongodb';
 import { Order } from 'src/common/integrations/mongodb/mongodb.interfaces';
 import { DB_CONNECTION } from 'src/common/integrations/mongodb/mongodb.service';
+import { ChangeStatusDTO } from './dtos/change-status.dto';
+import { ChangeTrackNumberDTO } from './dtos/change-tn.dto';
 
 @Injectable()
 export class OrdersService {
@@ -31,5 +33,27 @@ export class OrdersService {
     return await this.Orders.findOne({
       _id: id,
     });
+  }
+
+  async changeStatus(dto: ChangeStatusDTO) {
+    await this.Orders.updateOne(
+      { _id: new ObjectId(dto.order_id) },
+      {
+        $set: {
+          status: dto.status,
+        },
+      },
+    );
+  }
+
+  async changeTrackNumber(dto: ChangeTrackNumberDTO) {
+    await this.Orders.updateOne(
+      { _id: new ObjectId(dto.order_id) },
+      {
+        $set: {
+          'delivery_details.trak_number': dto.track_number,
+        },
+      },
+    );
   }
 }

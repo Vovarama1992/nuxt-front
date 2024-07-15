@@ -7,6 +7,8 @@ import {
   IsMongoId,
   IsNumber,
   IsOptional,
+  IsPhoneNumber,
+  IsPostalCode,
   IsString,
   Length,
   Max,
@@ -51,11 +53,11 @@ export class ProductDTO {
 
 export class AddressDTO {
   @IsString()
-  @Length(1, 128)
+  @Length(0, 128)
   city: string;
 
   @IsString()
-  @Length(1, 512)
+  @Length(0, 512)
   address: string;
 }
 
@@ -68,9 +70,20 @@ export class CreateOrderDTO {
   @Length(1, 128)
   last_name: string;
 
+  @IsString()
+  @Length(0, 6)
+  postal_code: string;
+
+  @IsPhoneNumber('RU')
+  phone_number: string;
+
+  @IsString()
+  @Length(0, 256)
+  pvz: string;
+
   @IsOptional()
   @IsString()
-  @Length(1, 128)
+  @Length(0, 128)
   surname?: string;
 
   @IsDefined()
@@ -88,12 +101,12 @@ export class CreateOrderDTO {
 
   @IsOptional()
   @IsString()
-  @Length(1, 256)
+  @Length(0, 256)
   message: string;
 
   @IsOptional()
   @IsString()
-  @Length(1, 128)
+  @Length(0, 128)
   promocode?: string;
 
   @IsDefined()

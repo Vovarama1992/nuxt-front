@@ -83,7 +83,7 @@ const statuses = [
 const route = useRoute();
 const productId = route.path.split("/").at(-1) as string;
 
-const order = await $fetch("http://localhost:8080/v1/order/" + productId, {
+const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
   headers: {
     Authorization: "Bearer " + useCookie("access_token").value,
   },

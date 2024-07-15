@@ -5,7 +5,7 @@ const typeFilters = defineModel("types", { default: () => [] });
 const brandFilters = defineModel("brands", { default: () => [] });
 
 try {
-  const result = await $fetch<Vars>("http://localhost:8080/v1/products/vars");
+  const result = await $fetch<Vars>("https://api.3hundred.ru/v1/products/vars");
   vars.value = result;
 } catch (err) {}
 </script>

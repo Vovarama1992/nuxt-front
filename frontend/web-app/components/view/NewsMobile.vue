@@ -60,7 +60,7 @@ const { data, execute } = await useFetch<{
     total_items: number;
     total_page: number;
   };
-}>("http://localhost:8080/v1/search/news", {
+}>("https://api.3hundred.ru/v1/search/news", {
   query: {
     limit: 5,
     page: currentPage,

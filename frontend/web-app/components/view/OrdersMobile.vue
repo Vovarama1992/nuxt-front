@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const orders = await $fetch("http://localhost:8080/v1/profile/orders", {
+const orders = await $fetch("https://api.3hundred.ru/v1/profile/orders", {
   headers: {
     Authorization: "Bearer " + useCookie("access_token").value,
   },

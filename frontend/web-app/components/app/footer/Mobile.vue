@@ -97,7 +97,7 @@ const links = ref([
 ]);
 
 try {
-  const vars: any = await $fetch("http://localhost:8080/v1/products/vars");
+  const vars: any = await $fetch("https://api.3hundred.ru/v1/products/vars");
   const brands = vars.find((el: any) => el.group === "brand");
   const listBrands = links.value.find((el) => el.title === "Бренды");
   
