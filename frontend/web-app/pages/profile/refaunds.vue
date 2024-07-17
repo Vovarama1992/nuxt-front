@@ -1,4 +1,9 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth',
+  layout: 'profile'
+});
+
 const orders = await $fetch<any>("https://api.3hundred.ru/v1/profile/orders", {
   headers: {
     Authorization: "Bearer " + useCookie("access_token").value,

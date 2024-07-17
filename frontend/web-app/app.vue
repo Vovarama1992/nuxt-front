@@ -24,17 +24,10 @@ onMounted(() => {
     favorites.laod();
   }
 });
-
-const layout = computed(() => {
-  if (route.path.split("/").includes("profile")) {
-    return "profile";
-    }
-  return "default";
-});
 </script>
 
 <template>
-  <NuxtLayout :name="layout">
+  <NuxtLayout>
     <div>
       <NuxtPage class="page-control" />
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="a" style="margin-top: 12rem; position: relative">
+  <div class="banner a" style="margin-top: 9.5rem; position: relative">
     <p
       style="
         top: 7.2rem;

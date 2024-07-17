@@ -75,7 +75,7 @@ onMounted(() => {
   background-color: transparent;
 
   &_preview {
-    background-color: red;
+    background-color: rgb(209, 209, 209);
     border: 2px solid rgb(209, 209, 209);
     background-size: cover;
     background-position: center;

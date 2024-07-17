@@ -1,6 +1,7 @@
+<!-- TODO: tl;dr fix everything here, <br />s are bad, styling using style attributes is bad, one letter class names are bad -->
 <template>
   <div
-    class="a"
+    class="banner a"
     style="
       display: flex;
       justify-content: space-between;
@@ -10,8 +11,8 @@
   >
     <div>
       <div>
-        <p class="ad-title" style="margin-left: 0">Провкряем товар</p>
-        <p class="ad-title" style="margin-left: 0">На кажлом этапе</p>
+        <p class="ad-title" style="margin-left: 0">Проверяем товар</p>
+        <p class="ad-title" style="margin-left: 0">на каждом этапе</p>
       </div>
 
       <p class="ad-text">

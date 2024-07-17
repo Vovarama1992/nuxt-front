@@ -1,4 +1,9 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth',
+  layout: 'profile'
+});
+
 const { isMobile } = useDevice();
 const route = useRoute();
 

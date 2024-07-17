@@ -1,5 +1,5 @@
 <template>
-  <div class="a" style="margin-top: 12rem; position: relative">
+  <div class="banner a" style="margin-top: 9.5rem; position: relative">
     <a href="https://www.cdek.ru/ru/tracking/" target="_blank">
       <q-btn
         style="
@@ -38,7 +38,7 @@
     <img src="~/public/cdek-baner.png" style="width: 100%" alt="" />
   </div>
 
-  <div class="b" style="padding: 0 1.1rem; margin-top: 5rem; position: relative">
+  <div class="banner b" style="padding: 0 1.1rem; margin-top: 5rem; position: relative">
     <a href="https://www.cdek.ru/ru/tracking/" target="_blank">
       <q-btn
         style="

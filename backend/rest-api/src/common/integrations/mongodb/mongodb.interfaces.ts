@@ -144,6 +144,9 @@ export interface Order {
     surname?: string;
     city: string;
     address: string;
+    postal_code: string;
+    phone_number: string;
+    pvz: string;
   };
 
   items: {

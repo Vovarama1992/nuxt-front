@@ -137,6 +137,9 @@ export class OrderService {
       customer: {
         city: dto.delivery_address.city,
         address: dto.delivery_address.address,
+        postal_code: dto.postal_code,
+        phone_number: dto.phone_number,
+        pvz: dto.pvz,
         profile_id: profileId,
         first_name: dto.first_name,
         last_name: dto.last_name,

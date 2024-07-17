@@ -1,11 +1,11 @@
 <template>
   <div
-    class="a"
+    class="banner a"
     style="
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 12rem;
+      margin-top: 9.5rem;
     "
   >
     <div>
@@ -185,6 +185,8 @@
     scale: 1.1;
   }
 }
+
+.a, .b { overflow: hidden; }
 
 .a { display: block; }
 .b { display: none; }

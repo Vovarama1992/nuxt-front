@@ -1,6 +1,7 @@
 <script setup lang="ts">
-definePageMeta({ 
+definePageMeta({
   middleware: 'auth',
+  layout: 'profile'
 });
 
 const balls = ref(0);
