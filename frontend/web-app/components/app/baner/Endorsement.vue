@@ -83,6 +83,7 @@ const imageSrc = computed(() =>
       flex-direction: row;
       padding: 5.3rem 7.5rem;
       align-items: center;
+      gap: 1.5rem;
 
       .watch, .placeholder {
         flex: 1;
@@ -95,6 +96,7 @@ const imageSrc = computed(() =>
       .name {
         font-size: 4.2rem;
         font-weight: 500;
+        text-wrap: nowrap;
       }
 
       .watch {
@@ -105,11 +107,12 @@ const imageSrc = computed(() =>
         display: flex;
         flex-direction: row-reverse;
         align-items: center;
-        gap: 1rem;
+        gap: 1.5rem;
 
         svg {
           height: 1em;
           width: auto;
+          overflow: visible;
         }
       }
     }
