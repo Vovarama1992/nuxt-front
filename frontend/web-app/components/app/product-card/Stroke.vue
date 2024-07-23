@@ -119,6 +119,7 @@ const discountSum = ref((props.price / 100) * props.discount);
               flat
               round
               class="counter__btn"
+              :disabled="cart.maxedOut(_id, sizeId as string)"
               @click="cart.add({product_id: _id, size_id: sizeId as string})"
               >+</q-btn
             >

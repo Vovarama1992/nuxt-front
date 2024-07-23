@@ -22,6 +22,7 @@ try {
     },
   });
 
+  promocode.value = result.promocode;
   balls.value = result.scores.quantity;
   history.value = result.scores.history;
   if (result.promocode) {

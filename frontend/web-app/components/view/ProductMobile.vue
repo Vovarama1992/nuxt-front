@@ -18,6 +18,19 @@ const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
 const cards = await useFetch<any>(
   `https://api.3hundred.ru/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
 );
+
+const IT_SIZE_ARRAY = [ 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL' ];
+const sortedSizeArray = computed(() => {
+  const unrefData = unref(data);
+  let sorter = (a: any, b: any) => a.title - b.title;
+
+  if (unrefData?.size_grid === 'IT') {
+    sorter = (a: any, b: any) =>
+      (IT_SIZE_ARRAY.indexOf(a.title.trim()) - IT_SIZE_ARRAY.indexOf(b.title.trim()));
+  }
+
+  return unrefData?.sizes.sort(sorter);
+});
 </script>
 
 <template>
@@ -223,7 +236,7 @@ const cards = await useFetch<any>(
             <q-btn
               flat
               class="sizes__size"
-              v-for="size in data?.sizes?.sort((a: any, b: any) => a.title - b.title)"
+              v-for="size in sortedSizeArray"
               :key="size._id"
               style="max-width: calc(20% - .3rem);min-width: calc(20% - .3rem)"
               :style="size.quantity === 0 ? 'background-color: #e5e5e5' : ''"

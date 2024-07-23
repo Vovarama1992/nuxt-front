@@ -4,7 +4,7 @@ const cart = useCartStore();
 const favorites = useFavoritesStore();
 const productId = route.path.split("/").at(-1) as string;
 
-const { data, pending, error, refresh } = await useFetch<any>(
+const { data, status, error, refresh } = await useFetch<any>(
   `https://api.3hundred.ru/v1/products/${productId}`
 );
 
@@ -17,7 +17,54 @@ const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
 const cards = await useFetch<any>(
   `https://api.3hundred.ru/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
 );
-const {isMobile} = useDevice();
+const { isMobile } = useDevice();
+
+function addQuantity() {
+  const size = unref(currentSize);
+  const unrefData = unref(data);
+
+  cart.add({
+    price: size.price,
+    discount: unrefData.discount,
+    product_id: productId,
+    size_grid: unrefData.size_grid,
+    size_id: size._id,
+    size_title: size.title,
+    preview: unrefData.preview,
+    title: unrefData.title,
+    maxQuantity: unref(currentSize).quantity
+  });
+}
+
+function addToCart() {
+  const size = unref(currentSize);
+  const unrefData = unref(data);
+
+  cart.add({
+    price: size.price,
+    discount: unrefData.discount,
+    product_id: productId,
+    size_grid: unrefData.size_grid,
+    size_id: size._id,
+    size_title: size.title,
+    preview: unrefData.preview,
+    title: unrefData.title,
+    maxQuantity: unref(currentSize).quantity
+  })
+}
+
+const IT_SIZE_ARRAY = [ 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL' ];
+const sortedSizeArray = computed(() => {
+  const unrefData = unref(data);
+  let sorter = (a: any, b: any) => a.title - b.title;
+
+  if (unrefData?.size_grid === 'IT') {
+    sorter = (a: any, b: any) =>
+      (IT_SIZE_ARRAY.indexOf(a.title.trim()) - IT_SIZE_ARRAY.indexOf(b.title.trim()));
+  }
+
+  return unrefData?.sizes.sort(sorter);
+});
 </script>
 
 <template>
@@ -27,7 +74,7 @@ const {isMobile} = useDevice();
         <app-carousel-product :images="[data.preview, ...data.photos]" />
 
         <div>
-          <div class="page__container block" style="width: 344px;">
+          <div class="page__container block">
             <q-btn
               round
               flat
@@ -77,16 +124,16 @@ const {isMobile} = useDevice();
                 flex-direction: column;
               "
             >
-              <span class="price">{{
-                usePriceFormat(currentSize.price - discountSum)
-              }}</span>
-              <span v-if="data.discount" class="discount">{{
-                usePriceFormat(currentSize.price)
-              }}</span>
+              <span class="price">
+                {{ usePriceFormat(currentSize.price - discountSum) }}
+              </span>
+              <span v-if="data.discount" class="discount">
+                {{ usePriceFormat(currentSize.price) }}
+              </span>
             </div>
 
             <div class="sizes">
-              <p class="sizes__title">Размерная сетка EU</p>
+              <p class="sizes__title">Размерная сетка {{ data?.size_grid }}</p>
 
               <div
                 style="
@@ -99,18 +146,12 @@ const {isMobile} = useDevice();
                 <q-btn
                   flat
                   class="sizes__size"
-                  style="max-width: calc(20% - .3rem);min-width: calc(20% - .3rem)"
-                  v-for="size in data?.sizes.sort((a: any, b: any) => a.title - b.title)"
+                  style="max-width: calc(20% - .3rem); min-width: calc(20% - .3rem)"
+                  v-for="size in sortedSizeArray"
                   :key="size._id"
                   :style="size.quantity === 0 ? 'background-color: #e5e5e5':''"
-                  :class="{
-                    sizes__size_select: currentSize._id === size._id,
-                  }"
-                  @click="
-                    () => {
-                      currentSize = size;
-                    }
-                  "
+                  :class="{ sizes__size_select: currentSize._id === size._id, }"
+                  @click="currentSize = size"
                 >
                   {{ size.title }}
                 </q-btn>
@@ -122,19 +163,7 @@ const {isMobile} = useDevice();
                   block
                   style="margin-top: 2.3rem"
                   v-if="!cart.quantityById(productId, currentSize._id)"
-                  @click="() => {
-                    if (cart.quantityById(productId, currentSize._id) >= currentSize.quantity) return;
-
-                    cart.add({
-                      price: currentSize.price,
-                      product_id: productId,
-                      size_grid: data.size_grid,
-                      size_id: currentSize._id,
-                      size_title: currentSize.title,
-                      preview: data.preview,
-                      title: data.title,
-                    })
-                  }"
+                  @click="addToCart"
                 >
                   Добавить в корзину
                 </ui-btn>
@@ -158,19 +187,8 @@ const {isMobile} = useDevice();
                   <q-btn
                     class="plus-btn__btn"
                     flat
-                    @click="() => {
-                    if (cart.quantityById(productId, currentSize._id) >= currentSize.quantity) return;
-
-                    cart.add({
-                      price: currentSize.price,
-                      product_id: productId,
-                      size_grid: data.size_grid,
-                      size_id: currentSize._id,
-                      size_title: currentSize.title,
-                      preview: data.preview,
-                      title: data.title,
-                    })
-                  }"
+                    :disabled="cart.maxedOut(productId, currentSize._id)"
+                    @click="addQuantity"
                   >
                     +
                   </q-btn
@@ -263,6 +281,7 @@ const {isMobile} = useDevice();
   width: min(1025px, 95%);
 
   &__container {
+    width: 34.4rem;
     border-radius: 2rem;
     padding: 2.3rem 1.8rem;
     background-color: #fff;
@@ -335,8 +354,8 @@ const {isMobile} = useDevice();
 
 .plus-btn {
   width: 100%;
-  height: 6.1rem;
-  border-radius: 0.8rem;
+  height: 7rem;
+  border-radius: 1.6rem;
   display: flex;
   align-items: center;
   justify-content: space-between;

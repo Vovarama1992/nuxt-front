@@ -50,6 +50,7 @@ const links = [
           <div style="display: flex; justify-content: center">
             <NuxtLink to="/" class="header__logo">
               <svg
+                class="logo"
                 viewBox="0 0 187 25"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -114,6 +115,10 @@ const links = [
 </template>
 
 <style scoped lang="scss">
+.logo {
+  overflow: visible;
+}
+
 .header {
   --headerHeight: 15.2rem;
   --bgContainerColor: var(--bg_container_color, white);

@@ -27,6 +27,7 @@ const slide = ref(0);
             margin-right: 2px;
             margin-left: 2px;
           "
+          @click="onClick"
         ></div>
         <div
           v-else
@@ -39,11 +40,26 @@ const slide = ref(0);
             margin-right: 2px;
             margin-left: 2px;
           "
+          @click="onClick"
         ></div>
       </template>
       <q-carousel-slide v-for="(img, i) in images" :key="img" :name="i">
-        <q-img :src="img" fit="cover" />
+        <q-img :src="img" fit="contain" />
       </q-carousel-slide>
     </q-carousel>
   </div>
 </template>
+
+<style lang="scss" scoped>
+:deep(.q-panel) {
+  overflow-y: hidden;
+}
+
+:deep(.q-img) {
+  height: 100%;
+}
+
+:deep(.q-img__image), :deep(.q-img) {
+  overflow: visible;
+}
+</style>

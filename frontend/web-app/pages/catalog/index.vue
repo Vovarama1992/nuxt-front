@@ -192,7 +192,7 @@ const cards = ref<
         />
       </div>
 
-      <div>
+      <div class="full-flex">
         <div
           class="ceneter"
           style="
@@ -322,6 +322,15 @@ const cards = ref<
 </template>
 
 <style scoped lang="scss">
+.filters {
+  width: 18.2rem;
+  position: relative;
+}
+
+.full-flex {
+  flex: 1;
+}
+
 .loader {
   width: 100%;
   height: 40rem;

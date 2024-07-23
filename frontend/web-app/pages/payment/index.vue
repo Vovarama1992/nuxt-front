@@ -60,7 +60,7 @@ const createOrder = async () => {
     navigateTo(`/payment/success/${result}`)
   } catch (err: any) {
     q.notify({
-      message: 'Возникла ошибка! Проверьте правильность заполнения полей или попробуйте собрать корзину заново',
+      message: err.data.message || 'Возникла ошибка! Проверьте правильность заполнения полей или попробуйте собрать корзину заново',
       color: 'danger'
     })
   }

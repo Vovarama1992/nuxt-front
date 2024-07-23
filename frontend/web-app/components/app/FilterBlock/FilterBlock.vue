@@ -92,6 +92,7 @@ watch(search, () => {
 
   &__filter {
     display: flex;
+    position: relative;
     margin-top: .8rem;
     cursor: pointer;
 
@@ -126,13 +127,30 @@ watch(search, () => {
   color: black!important;
 }
 
+.custom-checkbox {
+  width: 100%;
+}
+
+.custom-checkbox .q-checkbox__label {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.custom-checkbox .q-checkbox__label span {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+  display: block;
+}
+
 .custom-checkbox .q-checkbox__inner {
-    margin-left: 1rem;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: .4rem;
-    font-size: 1rem;
-    background: rgba(235, 235, 235, 1);
+  margin-left: 1rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: .4rem;
+  font-size: 1rem;
+  background: rgba(235, 235, 235, 1);
 }
 
 .custom-checkbox .q-checkbox__svg {

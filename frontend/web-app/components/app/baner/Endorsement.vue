@@ -35,7 +35,6 @@ const imageSrc = computed(() =>
     <img class="endorsement--picture" :src="imageSrc" :alt="name">
     <div class="endorsement--info">
       <div class="inner">
-        <div class="placeholder"></div>
         <div class="name">
           {{ name }}
         </div>

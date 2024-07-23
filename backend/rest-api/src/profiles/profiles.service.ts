@@ -393,6 +393,7 @@ ${textOrder}
       { _id: profileId },
       {
         projection: {
+          promocode: 1,
           'scores.quantity': 1,
         },
       },

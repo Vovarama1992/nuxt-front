@@ -169,7 +169,7 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
         <span>Вес посылки:</span><br />
         <span
           >{{
-            order[0].items?.reduce((acc, el) => (acc += el.package.weight), 0) /
+            order[0].items?.reduce((acc, el) => (acc += el.product.package.weight), 0) /
             1000
           }}
           кг</span
@@ -193,17 +193,18 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
           padding-bottom: 3rem;
         "
       >
+        <!-- TODO: store discount >:o -->
         <app-product-card-fill
           v-for="card in order[0].items"
-          :key="card.product_id"
-          :_id="card.product_id"
-          :preview="card.preview"
-          :price="card.sizes[0].price"
-          :title="card.title"
-          :discount="0"
-          :size-grid="card.size_grid"
-          :size-value="card.sizes[0].title"
-          :quantity="1"
+          :key="card.product._id"
+          :_id="card.product._id"
+          :preview="card.product.preview"
+          :price="card.size_price"
+          :title="card.product.title"
+          :discount="card.product.discount"
+          :size-grid="card.product.size_grid"
+          :size-value="card.size_title"
+          :quantity="card.quantity"
         />
       </div>
     </ui-accardion-fill>

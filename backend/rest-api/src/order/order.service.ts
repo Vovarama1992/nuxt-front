@@ -44,6 +44,7 @@ export class OrderService {
       discount?: number;
       price?: number;
       partner?: string;
+      type?: 'discount' | 'price';
     } = {};
 
     let result: any = await this.Promocodes.findOne({ code: pcode });
@@ -57,16 +58,24 @@ export class OrderService {
           },
         },
       );
+
+      if (!result)
+        throw new NotFoundException();
+
+      promocode.partner = result._id;
     } else {
-      if (result.discount) promocode.discount = result.discount;
-      if (result.price) promocode.price = result.price;
+      switch (true) {
+        case !!result.discount:
+          promocode.discount = result.discount;
+          promocode.type = 'discount';
+          break;
+        case !!result.price:
+          promocode.price = result.price;
+          promocode.type = 'price';
+          break;
+      }
     }
 
-    if (!result) {
-      throw new NotFoundException();
-    }
-
-    promocode.partner = result._id;
     return promocode;
   }
 
@@ -109,10 +118,12 @@ export class OrderService {
           ).quantity,
         });
 
-        totalAmount +=
-          fSize.price *
-            dto.products.find((el) => el.size_id === fSize._id?.toString())
-              .quantity || 1;
+        let productAmount = fSize.price;
+        productAmount -= (productAmount / 100) * fProduct.discount;
+        productAmount *= dto.products.find((el) => el.size_id === fSize._id?.toString())
+          .quantity || 1;
+
+        totalAmount += productAmount;
       }
     }
 
@@ -186,15 +197,15 @@ export class OrderService {
       await this.clientBotService.getBot().api.sendMessage(
         user.telegram_id.toString(),
         `
-  🎊 Ваш заказ успешно сформирован!
-  
-  ❗️ Чтобы оплатить заказ вам надо связаться с менеджером и предоставить идентификатор заказа
-  
-  *ID Заказа*: \`${insertedId.toString()}\`
-  
-  ${textOrder}
-  Итоговая цена — ${format(totalAmountPromocode || totalAmount)}
-      `,
+        🎊 Ваш заказ успешно сформирован!
+
+        ❗️ Чтобы оплатить заказ вам надо связаться с менеджером и предоставить идентификатор заказа
+
+        *ID Заказа*: \`${insertedId.toString()}\`
+
+        ${textOrder}
+        Итоговая цена — ${format(totalAmountPromocode || totalAmount)}
+        `.replaceAll('\t', ''),
         {
           parse_mode: 'Markdown',
           reply_markup: InlineKeyboard.from([
@@ -210,32 +221,39 @@ export class OrderService {
   async getOrder(profileId: ObjectId, orderId: ObjectId) {
     const order = await this.Orders.aggregate([
       { $match: { 'customer.profile_id': profileId, _id: orderId } },
+      { $unwind: '$items' },
       {
         $lookup: {
           from: 'products',
           localField: 'items.product_id',
           foreignField: '_id',
-          as: 'items',
-        },
+          as: 'fetchedProduct'
+        }
       },
+      { $unwind: '$fetchedProduct' },
       {
         $project: {
-          created_at: 1,
-          status: 1,
-          customer: {
-            city: 1,
-          },
-          payment_details: 1,
-          delivery_details: 1,
-          total_amount: 1,
-          total_amount_promocode: 1,
           items: {
-            preview: 1,
-            title: 1,
-            discount: 1,
-            sizes: 1,
-            'package.weight': 1,
-          },
+            product_id: 0,
+            product_title: 0,
+            product_type: 0,
+            product_brand: 0,
+            product_size_grid: 0,
+          }
+        }
+      },
+      { $addFields: { 'items.product': '$fetchedProduct' } },
+      {
+        $group: {
+          _id: '$_id',
+          created_at: { $first: '$created_at' },
+          status: { $first: '$status' },
+          customer: { $first: '$customer' },
+          payment_details: { $first: '$payment_details' },
+          delivery_details: { $first: '$delivery_details' },
+          total_amount: { $first: '$total_amount' },
+          total_amount_promocode: { $first: '$total_amount_promocode' },
+          items: { $push: '$items' }
         },
       },
     ]).toArray();
@@ -300,6 +318,7 @@ export class OrderService {
           brand: { $first: '$brand' },
           title: { $first: '$title' },
           size_grid: { $first: '$size_grid' },
+          discount: { $first: '$discount' },
           sizes: {
             $push: {
               _id: '$sizes._id',

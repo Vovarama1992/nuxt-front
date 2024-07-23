@@ -1,17 +1,21 @@
 import { defineStore } from "pinia";
 
+interface CartItem {
+  product_id: string;
+  size_id: string;
+  price: number;
+  discount?: number;
+  size_grid: string;
+  size_title: string;
+  preview: string;
+  title: string;
+  quantity: number;
+  maxQuantity: number;
+};
+
 export const useCartStore = defineStore("cart", {
   state: (): {
-    cart: {
-      product_id: string;
-      size_id: string;
-      price: number;
-      size_grid: string;
-      size_title: string;
-      preview: string;
-      title: string;
-      quantity: number;
-    }[];
+    cart: CartItem[];
   } => ({
     cart: [],
   }),
@@ -27,23 +31,40 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
+    maxedOut(productId: string, sizeId: string) {
+      const items = this.$state.cart.find(
+        (el) => el.product_id === productId && el.size_id === sizeId
+      );
+
+      return items ? items.quantity >= items.maxQuantity : false;
+    },
+
     add(item: {
       product_id: string;
       size_id: string;
-      price: number;
-      size_grid: string;
-      size_title: string;
-      preview: string;
-      title: string;
+      price?: number;
+      discount?: number;
+      size_grid?: string;
+      size_title?: string;
+      preview?: string;
+      title?: string;
+      maxQuantity?: number;
     }) {
-      const findedItem = this.$state.cart.find(
+      const foundItem = this.$state.cart.find(
         (el) => el.product_id === item.product_id && el.size_id === item.size_id
       );
 
-      if (findedItem) {
-        findedItem.quantity += 1;
+      if (foundItem) {
+        if (foundItem.quantity >= foundItem.maxQuantity) return;
+
+        foundItem.quantity += 1;
       } else {
-        this.$state.cart.push({ ...item, quantity: 1 });
+        /*
+        if (Object.values(item).length < 8)
+          throw new Error('not enough information to push to the cart');
+        */
+
+        this.$state.cart.push({ ...item, quantity: 1 } as CartItem);
       }
 
       this.save();
