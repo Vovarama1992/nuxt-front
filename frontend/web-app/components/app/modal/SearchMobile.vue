@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const text = ref("Кроссовки Adidas");
-const timeout = ref<NodeJS.Timeout | null>(null);
 const hasFocusStatus = ref(false);
 const isFirstTime = ref(true);
 
@@ -29,12 +28,10 @@ const { data, execute } = useFetch<{
   watch: false,
 });
 
+let timeout: NodeJS.Timeout | undefined;
 watch(text, () => {
-  if (timeout.value) clearTimeout(timeout.value);
-
-  timeout.value = setTimeout(async function () {
-    await execute();
-  }, 500);
+  if (timeout) clearTimeout(timeout);
+  timeout = setTimeout(execute, 500);
 });
 
 await execute();
@@ -85,11 +82,9 @@ await execute();
           <p
             @mousedown="
               navigateTo({
-                path: '/search',
+                path: '/catalog',
                 query: {
-                  text,
-                  page: 1,
-                  limit: 4,
+                  q: text
                 },
               })
             "
@@ -143,11 +138,9 @@ await execute();
             style="height: 7.2rem; font-size: 1.8rem"
             @click="
               navigateTo({
-                path: '/search',
+                path: '/catalog',
                 query: {
-                  text,
-                  page: 1,
-                  limit: 4,
+                  q: text
                 },
               })
             "

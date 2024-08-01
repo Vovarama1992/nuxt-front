@@ -44,7 +44,7 @@ const slide = ref(0);
         ></div>
       </template>
       <q-carousel-slide v-for="(img, i) in images" :key="img" :name="i">
-        <q-img :src="img" fit="contain" />
+        <ui-zoom :src="img" />
       </q-carousel-slide>
     </q-carousel>
   </div>
@@ -55,11 +55,7 @@ const slide = ref(0);
   overflow-y: hidden;
 }
 
-:deep(.q-img) {
+:deep(.zoom) {
   height: 100%;
-}
-
-:deep(.q-img__image), :deep(.q-img) {
-  overflow: visible;
 }
 </style>

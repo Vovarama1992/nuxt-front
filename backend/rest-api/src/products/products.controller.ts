@@ -29,6 +29,13 @@ export class ProductsController {
     return await this.productsService.getVars();
   }
 
+  @Get('/filters')
+  async getFilters(
+    @Query() dto: GetProductDTO
+  ) {
+    return await this.productsService.getFilters(dto);
+  }
+
   @Get('/page/:page')
   async getProducts(
     @Query() dto: GetProductDTO,

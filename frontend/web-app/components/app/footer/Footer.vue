@@ -89,7 +89,7 @@ try {
   const vars: any = await $fetch("https://api.3hundred.ru/v1/products/vars");
   const brands = vars.find((el: any) => el.group === "brand");
   const listBrands = tableElements.value.find((el) => el.title === "Бренды");
-  
+
   if (listBrands) {
     listBrands.content = brands.variables.map((el: any) => ({
       title: el.title,

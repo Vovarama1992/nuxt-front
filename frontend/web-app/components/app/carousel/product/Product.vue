@@ -24,11 +24,7 @@ const slide = ref(0);
           :name="i"
           class="slide"
         >
-          <q-img
-            :src="'https://api.3hundred.ru/' + img"
-            fit="contain"
-            class="image"
-          />
+          <ui-zoom :src="'https://api.3hundred.ru/' + img"></ui-zoom>
         </q-carousel-slide>
       </q-carousel>
 

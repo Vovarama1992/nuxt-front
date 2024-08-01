@@ -1,18 +1,38 @@
 <script setup lang="ts">
-const props = defineProps<{
-  title: string;
-  filters: string[];
-  onElement: boolean;
-}>();
+interface Filter {
+  _id: string,
+  count: number
+}
+
+const props = defineProps({
+  title: {
+    type: String,
+    required: true
+  },
+  filters: {
+    type: Array<Filter>,
+    required: true
+  },
+  radio: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const localFilters = ref([...props.filters]);
 const endElem = ref(5);
 const search = ref('');
 const checked = defineModel({default: (): string[] => []});
 
-watch(search, () => {
-  localFilters.value = props.filters.filter(item => item.includes(search.value));
-});
+const qCheckbox = resolveComponent('q-checkbox');
+const qRadio = resolveComponent('q-radio');
+
+function watchSearch() {
+  localFilters.value = props.filters.filter(item => item._id.includes(search.value));
+}
+
+watch(() => props.filters, watchSearch);
+watch(search, watchSearch);
 </script>
 
 <template>
@@ -31,11 +51,12 @@ watch(search, () => {
       <div
         class="filter-block__filter"
         v-for="filter in localFilters.slice(0, endElem)"
-        :key="filter"
+        :key="filter._id"
       >
-        <q-checkbox class="custom-checkbox" v-model="checked" :val="filter">
-          <span style="white-space: nowrap;">{{ filter }}</span>
-        </q-checkbox>
+        <component :is="radio ? qRadio : qCheckbox" class="custom-checkbox" v-model="checked" :val="filter._id">
+          <span class="name">{{ filter._id }}</span>
+          <!--<span class="count">{{ filter.count }}</span>-->
+        </component>
       </div>
     </div>
 
@@ -51,13 +72,13 @@ watch(search, () => {
 
 <style scoped lang="scss">
 .filter-block {
-  margin-bottom: 2.7rem;
+  margin-bottom: 2.4rem;
 
   &__title {
     font-weight: 500;
     font-size: 1.2rem;
     margin-bottom: 1.5rem;
-    margin-left: 1rem;
+    margin-left: 0.8rem;
   }
 
   &__input {
@@ -109,7 +130,7 @@ watch(search, () => {
   }
 
   &__checkbox {
-    margin-left: 1rem;
+    margin-left: 0.8rem;
     width: 1.6rem;
     height: 1.6rem;
     border-radius: .4rem;
@@ -123,20 +144,32 @@ watch(search, () => {
 </style>
 
 <style>
-.custom-checkbox .q-checkbox__inner--truthy, .custom-checkbox .q-checkbox__inner--indet {
+.custom-checkbox .q-checkbox__inner--truthy,
+.custom-checkbox .q-checkbox__inner--indet,
+.custom-checkbox .q-radio__inner--truthy {
   color: black!important;
 }
 
 .custom-checkbox {
   width: 100%;
+  min-width: 0;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 
-.custom-checkbox .q-checkbox__label {
+.custom-checkbox .q-checkbox__label, .custom-checkbox .q-radio__label {
   flex: 1 1 0;
   min-width: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
 }
 
-.custom-checkbox .q-checkbox__label span {
+.custom-checkbox .q-checkbox__label span.count, .custom-checkbox .q-radio__label span.count {
+  margin-left: auto;
+}
+
+.custom-checkbox .q-checkbox__label span.name, .custom-checkbox .q-radio__label span.name {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -144,8 +177,7 @@ watch(search, () => {
   display: block;
 }
 
-.custom-checkbox .q-checkbox__inner {
-  margin-left: 1rem;
+.custom-checkbox .q-checkbox__inner, .custom-checkbox .q-radio__inner {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: .4rem;
@@ -153,14 +185,14 @@ watch(search, () => {
   background: rgba(235, 235, 235, 1);
 }
 
-.custom-checkbox .q-checkbox__svg {
+.custom-checkbox .q-checkbox__svg, .custom-checkbox .q-radio__svg {
   width: 1.1rem!important;
   height: 1.1rem!important;
   left: .3rem;
   top: .2rem;
 }
 
-.custom-checkbox .q-checkbox__bg {
+.custom-checkbox .q-checkbox__bg, .custom-checkbox .q-radio__bg {
   border: 0!important;
   width: 100%!important;
   top: 0!important;

@@ -225,6 +225,7 @@ const slide = ref(0);
 
 <style scoped lang="scss">
 .product-card {
+  cursor: pointer;
   display: flex;
   padding: 2.5rem 1.6rem;
   padding-top: 1.6rem;

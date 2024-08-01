@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const text = ref("Кроссовки Adidas");
-const timeout = ref<NodeJS.Timeout | null>(null);
 const hasFocusStatus = ref(false);
 const isFirstTime = ref(true);
 const route = useRoute();
@@ -30,12 +29,10 @@ const { data, execute } = useFetch<{
   watch: false,
 });
 
+let timeout: NodeJS.Timeout | undefined;
 watch(text, () => {
-  if (timeout.value) clearTimeout(timeout.value);
-
-  timeout.value = setTimeout(async function () {
-    await execute();
-  }, 500);
+  if (timeout) clearTimeout(timeout);
+  timeout = setTimeout(execute, 500);
 });
 
 await execute();
@@ -88,11 +85,9 @@ const { isMobile } = useDevice();
             <p
               @click="
                 navigateTo({
-                  path: '/search',
+                  path: '/catalog',
                   query: {
-                    text,
-                    page: 1,
-                    limit: 4,
+                    q: text
                   },
                 })
               "
@@ -171,11 +166,9 @@ const { isMobile } = useDevice();
           </p>
           <ui-btn block dark style="width: 36rem"
             @click="navigateTo({
-                  path: '/search',
+                  path: '/catalog',
                   query: {
-                    text,
-                    page: 1,
-                    limit: 4,
+                    q: text
                   },
                 })"
             >Показать все результаты

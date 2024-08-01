@@ -27,27 +27,124 @@ export class ProductsService {
     this.Variables = mongodbService.db('3hundred').collection('variables');
   }
 
-  async getProducts(page: number, dto: GetProductDTO) {
-    const limit = 40;
+  private getMongoFilters(dto: GetProductDTO, excludePrice = false) {
     const filters: Record<string, unknown> = {};
-    // const sum_limit: Record<string, unknown> = { $gte: 0 };
 
-    if (dto.brand?.length) {
-      filters['brand'] = {
+    if (dto.q?.length)
+      filters.$text = {
+        $search: dto.q
+      };
+
+    if (dto.brand?.length)
+      filters.brand = {
         $in: dto.brand,
       };
-    }
 
-    if (dto.type?.length) {
-      filters['type'] = {
+    if (dto.type?.length)
+      filters.type = {
         $in: dto.type,
       };
-    }
 
-    const a = await this.Products.aggregate([
+    if (!excludePrice && (dto.min_price !== undefined || dto.max_price !== undefined))
+      filters['sizes.price'] = {
+        $gte: dto.min_price,
+        $lte: dto.max_price
+      };
+
+    if (dto.sizes)
+      filters['sizes.title'] = {
+        $in: dto.sizes
+      };
+
+    return {
+      $match: { 'status.is_hidden': false, ...filters },
+    };
+  }
+
+  async getFilters(dto: GetProductDTO) {
+    const aggregation = await this.Products.aggregate([
+      this.getMongoFilters(dto, true),
       {
-        $match: { 'status.is_hidden': false, ...filters },
+        $facet: {
+          brands: [
+            {
+              $group: {
+                _id: '$brand',
+                count: {
+                  $sum: 1
+                }
+              }
+            },
+            { $sort: { count: -1 } }
+          ],
+
+          types: [
+            {
+              $group: {
+                _id: '$type',
+                count: { $sum: 1 }
+              }
+            },
+            { $sort: { count: -1 } }
+          ],
+
+          sizes: [
+            { $unwind: '$sizes' },
+            {
+              $group: {
+                _id: '$sizes.title',
+                count: { $sum: 1 }
+              }
+            },
+            { $sort: { count: -1 } }
+          ],
+
+          price: [
+            this.getMongoFilters(dto, true),
+            { $unwind: '$sizes' },
+            {
+              $group: {
+                _id: null,
+                min: {
+                  $min: '$sizes.price'
+                },
+                max: {
+                  $max: '$sizes.price'
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                min: 1,
+                max: 1
+              }
+            }
+          ]
+        }
       },
+      {
+        $project: {
+          brands: '$brands',
+          types: '$types',
+          sizes: '$sizes',
+          price: {
+            $arrayElemAt: [ '$price', 0 ]
+          }
+        }
+      }
+    ]).toArray();
+
+    
+
+    return aggregation[0];
+  }
+
+  async getProducts(page: number, dto: GetProductDTO) {
+    const limit = 40;
+
+    const aggregation = await this.Products.aggregate([
+      this.getMongoFilters(dto),
       {
         $facet: {
           data: [
@@ -78,7 +175,7 @@ export class ProductsService {
       },
     ]).toArray();
 
-    return a;
+    return aggregation;
   }
 
   async getProduct(_id: ObjectId) {

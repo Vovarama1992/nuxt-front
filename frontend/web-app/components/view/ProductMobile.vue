@@ -9,10 +9,7 @@ const { data, pending, error, refresh } = await useFetch<any>(
   `https://api.3hundred.ru/v1/products/${productId}`
 );
 
-const currentSize = ref(
-  data.value?.sizes.sort((a: any, b: any) => a.price - b.price)[0] || {}
-);
-
+const currentSize = ref<any>(data.value.sizes[0] || {});
 const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
 
 const cards = await useFetch<any>(
@@ -29,30 +26,23 @@ const sortedSizeArray = computed(() => {
       (IT_SIZE_ARRAY.indexOf(a.title.trim()) - IT_SIZE_ARRAY.indexOf(b.title.trim()));
   }
 
-  return unrefData?.sizes.sort(sorter);
+  return [...unrefData?.sizes].sort(sorter);
 });
+
+const toggleFavorite = () => {
+  if (favorites.find(productId) === -1) {
+    return favorites.add(productId);
+  }
+
+  favorites.del(productId);
+};
 </script>
 
 <template>
   <div>
-    <div
-      style="
-        background-color: #fff;
-        padding: 1rem 0;
-        display: flex;
-        justify-content: space-between;
-        position: relative;
-      "
-    >
-      <q-btn round flat style="margin-left: 1.5rem" @click="router.back()">
+    <div class="top-bar">
+      <q-btn round flat class="bar-button back" @click="router.back()">
         <svg
-          style="
-            rotate: 180deg;
-            position: relative;
-            left: -1px;
-            width: 0.9rem;
-            height: 1.7rem;
-          "
           width="9"
           height="17"
           viewBox="0 0 10 18"
@@ -72,39 +62,39 @@ const sortedSizeArray = computed(() => {
       <q-btn
         round
         flat
-        style="margin-right: 1.5rem"
-        @click="() => {
-          if (favorites.find(productId) === -1) {
-            return favorites.add(productId);
-          }
-
-          favorites.del(productId);
-        }"
+        class="bar-button favorite"
+        @click="toggleFavorite"
       >
-        <svg
-          style="width: 2.3rem; height: 2.1rem"
-          viewBox="0 0 16 15"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <ClientOnly>
+        <client-only>
+          <svg
+            v-if="favorites.find(productId) !== -1"
+            viewBox="0 0 16 15"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
-              v-if="favorites.find(productId) !== -1"
-              d="M4.69469 1C2.6543 1 1.00024 2.7279 1.00024 4.85938C1.00024 9.125 8.00024 14 8.00024 14C8.00024 14 15.0002 9.125 15.0002 4.85938C15.0002 2.21875 13.3462 1 11.3058 1C9.85911 1 8.60663 1.86865 8.00024 3.13391C7.39386 1.86865 6.14138 1 4.69469 1Z"
-              stroke="#D4D4D4"
-              stroke-width="1.5"
-              stroke-linejoin="round"
-            />
-            <path
-              v-else
               d="M4.69469 1C2.6543 1 1.00024 2.7279 1.00024 4.85938C1.00024 9.125 8.00024 14 8.00024 14C8.00024 14 15.0002 9.125 15.0002 4.85938C15.0002 2.21875 13.3462 1 11.3058 1C9.85911 1 8.60663 1.86865 8.00024 3.13391C7.39386 1.86865 6.14138 1 4.69469 1Z"
               stroke="#FF4646"
               fill="#FF4646"
               stroke-width="1.5"
               stroke-linejoin="round"
             />
-          </ClientOnly>
-        </svg>
+          </svg>
+
+          <svg
+            v-else
+            viewBox="0 0 16 15"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4.69469 1C2.6543 1 1.00024 2.7279 1.00024 4.85938C1.00024 9.125 8.00024 14 8.00024 14C8.00024 14 15.0002 9.125 15.0002 4.85938C15.0002 2.21875 13.3462 1 11.3058 1C9.85911 1 8.60663 1.86865 8.00024 3.13391C7.39386 1.86865 6.14138 1 4.69469 1Z"
+              stroke="#D4D4D4"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </client-only>
       </q-btn>
     </div>
 
@@ -113,88 +103,27 @@ const sortedSizeArray = computed(() => {
       :images="['https://api.3hundred.ru/' + data.preview, ...data.photos.map((el: any) => 'https://api.3hundred.ru/' + el)]"
     />
 
-    <div style="width: min(95%, 1025px); margin: auto; margin-bottom: 2.7rem">
-      <h2
-        style="
-          font-weight: 500;
-          font-size: 2rem;
-          line-height: 117%;
-          text-align: center;
-          margin: 0;
-          margin-top: 2.5rem;
-        "
-      >
+    <div class="product-info">
+      <h2 class="brand">
         {{ data?.brand }}
       </h2>
-      <h1
-        style="
-          font-weight: 300;
-          font-size: 1.5rem;
-          line-height: 117%;
-          text-align: center;
-          color: #7f7f7f;
-          margin: 0;
-          margin-top: 0.9rem;
-        "
-      >
+      <h1 class="title">
         {{ data?.title }}
       </h1>
 
-      <div style="display: flex; align-items: center; justify-content: center">
-        <p
-          style="
-            font-weight: 400;
-            font-size: 2.5rem;
-            line-height: 117%;
-            text-align: center;
-            margin: 0;
-            margin-top: 1.2rem;
-          "
-        >
+      <div class="price">
+        <p class="main" >
           {{ usePriceFormat(currentSize.price - discountSum) }}
         </p>
-        <p
-          v-if="data.discount"
-          style="
-            font-weight: 400;
-            font-size: 1.5rem;
-            line-height: 117%;
-            text-align: center;
-            margin: 0;
-            margin-top: 1.2rem;
-            color: #7f7f7f;
-            margin-left: 1rem;
-            opacity: 0.5;
-            text-decoration: line-through;
-          "
-        >
+        <p v-if="data.discount" class="discount">
           {{ usePriceFormat(currentSize.price) }}
         </p>
       </div>
 
-      <div
-        v-if="data.status.in_stock"
-        style="
-          border-radius: 5rem;
-          width: 23.3rem;
-          height: 5.1rem;
-          text-transform: none;
-          background: radial-gradient(
-            444.82% 306.47% at 44.52% -45.1%,
-            rgb(166, 77, 255) 0%,
-            rgb(42, 0, 208) 100%
-          );
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: auto;
-          margin-top: 2.5rem;
-        "
-      >
+      <div v-if="data.status.in_stock" class="in-stock">
         Экспресс-доставка
         <svg
-          style="margin-left: 1rem; width: 1.8rem; height: 2rem"
+          class="icon"
           viewBox="0 0 18 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -209,39 +138,21 @@ const sortedSizeArray = computed(() => {
         </svg>
       </div>
 
-      <div style="margin-top: 2.7rem">
-        <p
-          style="
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 400;
-            line-height: 117%;
-            margin-bottom: 0;
-            color: #7f7f7f;
-          "
-        >
+      <div class="size-table">
+        <p class="text">
           Таблица размеров {{ data?.size_grid }}
         </p>
 
         <div class="sizes">
-          <div
-            style="
-              display: flex;
-              flex-wrap: wrap;
-              flex-shrink: 0;
-              /* grid-template-columns: repeat(4, 1fr); */
-              gap: 0.3rem;
-            "
-          >
+          <div class="sizes__inner">
             <q-btn
               flat
               class="sizes__size"
               v-for="size in sortedSizeArray"
               :key="size._id"
-              style="max-width: calc(20% - .3rem);min-width: calc(20% - .3rem)"
-              :style="size.quantity === 0 ? 'background-color: #e5e5e5' : ''"
               :class="{
-                sizes__size_select: currentSize._id === size._id,
+                selected: currentSize._id === size._id,
+                'not-in-stock': size.quantity === 0
               }"
               @click="
                 () => {
@@ -354,7 +265,6 @@ const sortedSizeArray = computed(() => {
           style="
             font-weight: 400;
             font-size: 1.8rem;
-            line-height: 117%;
             text-align: center;
           "
           @click="show = !show"
@@ -407,25 +317,153 @@ const sortedSizeArray = computed(() => {
 </template>
 
 <style scoped lang="scss">
-.sizes {
-  margin-top: 2rem;
+.top-bar {
+  background-color: #fff;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
 
-  &__size {
-    width: 100%;
-    height: 4.5rem;
-    border-radius: 0.8rem;
-    border: 1px solid #d6d6d6;
-    font-weight: 400;
-    font-size: 1.8rem;
+  .bar-button {
+    margin: 0 1.5rem;
+
+    &.favorite svg {
+      width: 2.3rem;
+      height: 2.1rem
+    }
+
+    &.back svg {
+      rotate: 180deg;
+      position: relative;
+      left: -1px;
+      width: 0.9rem;
+      height: 1.7rem;
+    }
+  }
+}
+
+.product-info {
+  width: min(95%, 1025px);
+  margin: auto;
+  margin-bottom: 2.7rem;
+
+  .brand {
+    font-weight: 500;
+    font-size: 2rem;
     line-height: 117%;
-    color: #7f7f7f;
-    background-color: white;
-    transition: background-color 0.15s, border-color 0.15s;
+    text-align: center;
+    margin: 0;
+    margin-top: 2.5rem;
+  }
 
-    &_select {
-      color: #fff;
-      border-color: #000;
-      background-color: #000;
+  .title {
+    font-weight: 300;
+    font-size: 1.5rem;
+    line-height: 117%;
+    text-align: center;
+    color: #7f7f7f;
+    margin: 0;
+    margin-top: 0.9rem;
+  }
+
+  .price {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .main {
+      font-weight: 400;
+      font-size: 2.5rem;
+      line-height: 117%;
+      text-align: center;
+      margin: 0;
+      margin-top: 1.2rem;
+    }
+
+    .discount {
+      font-weight: 400;
+      font-size: 1.5rem;
+      line-height: 117%;
+      text-align: center;
+      margin: 0;
+      margin-top: 1.2rem;
+      color: #7f7f7f;
+      margin-left: 1rem;
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+  }
+
+  .in-stock {
+    border-radius: 5rem;
+    width: 23.3rem;
+    height: 5.1rem;
+    text-transform: none;
+    background: radial-gradient(
+      444.82% 306.47% at 44.52% -45.1%,
+      rgb(166, 77, 255) 0%,
+      rgb(42, 0, 208) 100%
+    );
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    margin-top: 2.5rem;
+
+    .icon {
+      margin-left: 1rem;
+      width: 1.8rem;
+      height: 2rem;
+    }
+  }
+
+  .size-table {
+    margin-top: 2.7rem;
+
+    .text {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 400;
+      line-height: 117%;
+      margin-bottom: 0;
+      color: #7f7f7f;
+    }
+
+    .sizes {
+      margin-top: 2rem;
+
+      &__inner {
+        display: flex;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        /* grid-template-columns: repeat(4, 1fr); */
+        gap: 0.3rem;
+      }
+
+      &__size {
+        width: 100%;
+        height: 4.5rem;
+        border-radius: 0.8rem;
+        border: 1px solid #d6d6d6;
+        font-weight: 400;
+        font-size: 1.8rem;
+        line-height: 117%;
+        color: #7f7f7f;
+        background-color: white;
+        transition: background-color 0.15s, border-color 0.15s;
+        max-width: calc(20% - .3rem);
+
+        &.selected {
+          color: #fff;
+          border-color: #000;
+          background-color: #000;
+        }
+
+        &.not-in-stock {
+          background-color: #e5e5e5;
+        }
+      }
     }
   }
 }

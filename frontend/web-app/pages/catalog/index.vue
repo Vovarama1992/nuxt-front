@@ -2,8 +2,7 @@
 const route = useRoute();
 const router = useRouter();
 
-type Vars = { group: string; variables: { _id: string; title: string }[] }[];
-type Products = {
+interface Product {
   data: {
     _id: string;
     preview: string;
@@ -23,43 +22,93 @@ type Products = {
   total_count: {
     count: number;
   }[];
-}[];
+};
 
-const typeFilters = ref<string[]>([]);
-const brandFilters = ref<string[]>([]);
-const vars = ref<Vars>([]);
+interface Filter {
+  _id: string,
+  count: number
+}
 
-try {
-  const result = await $fetch<Vars>("https://api.3hundred.ru/v1/products/vars");
-  vars.value = result;
-} catch (err) {}
+interface Filters {
+  brands: Filter[];
+  types: Filter[];
+  sizes: Filter[];
+  price: { min: number, max: number };
+}
 
-const { data, error, refresh } = await useFetch<Products>(
-  computed(() => {
-    const baseURL = `https://api.3hundred.ru/v1/products/page/${
-      route.query.page || 1
-    }`;
+const typeFilters = ref<string[]>(
+  (route.query.type as string || "")
+    .split(";")
+    .filter(x => !!x.trim().length)
+);
+
+const brandFilters = ref<string[]>(
+  (route.query.brand as string || "")
+    .split(";")
+    .filter(x => !!x.trim().length)
+);
+
+const sizeFilters = ref<string[]>(
+  (route.query.sizes as string || "")
+    .split(";")
+    .filter(x => !!x.trim().length)
+);
+
+function computeURL(baseURL: string, page = false) {
+  return function() {
     const u = new URL(baseURL);
 
-    if (route.query.lte)
-      u.searchParams.append("lte", route.query.lte.toString());
-    if (route.query.gte)
-      u.searchParams.append("gte", route.query.gte.toString());
+    if (page)
+      u.pathname += "/" + (route.query.page || "1");
+
+    if (route.query.q)
+      u.searchParams.append("q", route.query.q.toString());
+    if (route.query.min_price)
+      u.searchParams.append("min_price", route.query.min_price.toString());
+    if (route.query.max_price)
+      u.searchParams.append("max_price", route.query.max_price.toString());
     if (route.query.type)
       u.searchParams.append("type", route.query.type.toString());
     if (route.query.brand)
       u.searchParams.append("brand", route.query.brand.toString());
+    if (route.query.sizes)
+      u.searchParams.append("sizes", route.query.sizes.toString());
 
     return u.toString();
-  })
+  }
+}
+
+const { data } = await useFetch<Product[]>(
+  computed(computeURL("https://api.3hundred.ru/v1/products/page", true))
 );
 
-watch([typeFilters, brandFilters], async (old, newV) => {
+const { data: filters } = await useFetch<Filters>(
+  computed(computeURL("https://api.3hundred.ru/v1/products/filters"))
+);
+
+const unrefFilters = unref(filters);
+const priceOuterRange = ref(unrefFilters?.price || { min: 1000, max: 250000 });
+const priceRange = ref({
+  min: !route.query.min_price || isNaN(+route.query.min_price) ?
+    unref(priceOuterRange).min :
+    +route.query.min_price,
+
+  max: !route.query.max_price || isNaN(+route.query.max_price) ?
+    unref(priceOuterRange).max :
+    +route.query.max_price
+});
+
+watch([typeFilters, brandFilters, priceRange, sizeFilters], async (old, newV) => {
   const q: any = { page: 1 };
   cards.value = [];
 
   q.type = typeFilters.value.join(";");
   q.brand = brandFilters.value.join(";");
+  q.sizes = sizeFilters.value.join(";");
+
+  const { min, max } = unref(priceRange);
+  q.min_price = min;
+  q.max_price = max;
 
   await router.push({
     path: route.fullPath,
@@ -67,10 +116,29 @@ watch([typeFilters, brandFilters], async (old, newV) => {
   });
 });
 
-watch(data, (old, newV) => {
-  if (data.value) {
+const sizes = ref<Filter[]>([]);
+
+const IT_SIZE_ARRAY = [ "XS", "S", "M", "L", "XL", "XXL", "XXXL" ];
+const setFilters = (filters: Filters | null) => {
+  if (!filters) return;
+
+  priceOuterRange.value = filters.price;
+
+  sizes.value = [...filters.sizes].sort((a, b) => {
+    if (IT_SIZE_ARRAY.includes(a._id.trim()) && IT_SIZE_ARRAY.includes(b._id.trim()))
+      return IT_SIZE_ARRAY.indexOf(a._id.trim()) - IT_SIZE_ARRAY.indexOf(b._id.trim())
+    else
+      return +a._id - +b._id;
+  });
+};
+
+if (unrefFilters)
+  setFilters(unrefFilters);
+watch(filters, setFilters);
+
+watch(data, () => {
+  if (data.value)
     cards.value = [...cards.value, ...data.value[0].data];
-  }
 });
 
 const filterDialog = ref(false);
@@ -100,12 +168,6 @@ const cards = ref<
     <app-subheader class="a">
       {{ route.query.name?.toString() || "Каталог" }}
     </app-subheader>
-
-    <app-modal-filter
-      v-model="filterDialog"
-      v-model:types="typeFilters"
-      v-model:brands="brandFilters"
-    />
 
     <div
       class="b"
@@ -172,24 +234,33 @@ const cards = ref<
           Фильтр
         </p>
 
-        <app-filter-block
-          :title="'Тип'"
-          v-model="typeFilters"
-          :filters="
-            vars
-              .find((el) => el.group === 'type')
-              ?.variables.map((el) => el.title) || []
-          "
-        />
-        <app-filter-block
-          title="Бренд"
-          v-model="brandFilters"
-          :filters="
-            vars
-              .find((el) => el.group === 'brand')
-              ?.variables.map((el) => el.title) || []
-          "
-        />
+        <app-modal-filter v-model="filterDialog">
+          <app-filter-range-block
+            title="Цена"
+            v-model="priceRange"
+            :min="priceOuterRange.min"
+            :max="priceOuterRange.max"
+          />
+
+          <app-filter-block
+            title="Тип"
+            v-model="typeFilters"
+            :filters="filters?.types || []"
+          />
+
+          <app-filter-block
+            title="Бренд"
+            v-model="brandFilters"
+            :filters="filters?.brands || []"
+          />
+
+          <app-filter-block
+            v-if="typeFilters.length !== 0"
+            title="Размер"
+            v-model="sizeFilters"
+            :filters="sizes"
+          />
+        </app-modal-filter>
       </div>
 
       <div class="full-flex">

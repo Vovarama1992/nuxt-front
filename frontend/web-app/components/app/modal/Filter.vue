@@ -1,36 +1,18 @@
 <script setup lang="ts">
-type Vars = { group: string; variables: { _id: string; title: string }[] }[];
-const vars = ref<Vars>([]);
+const props = defineProps([ 'filters', 'priceOuterRange' ]);
+
+const { isMobile } = useDevice();
+
 const typeFilters = defineModel("types", { default: () => [] });
 const brandFilters = defineModel("brands", { default: () => [] });
-
-try {
-  const result = await $fetch<Vars>("https://api.3hundred.ru/v1/products/vars");
-  vars.value = result;
-} catch (err) {}
+const priceRange = defineModel("price", { default: () => ({ min: 0, max: 250000 }) });
+const sizeFilters = defineModel("sizes", { default: () => [] });
 </script>
 
 <template>
-  <app-modal title="Фильтр">
+  <app-modal title="Фильтр" v-if="isMobile">
     <div class="filters__content">
-      <app-filter-block
-        :title="'Тип'"
-        v-model="typeFilters"
-        :filters="
-          vars
-            .find((el) => el.group === 'type')
-            ?.variables.map((el) => el.title) || []
-        "
-      />
-      <app-filter-block
-        title="Бренд"
-        v-model="brandFilters"
-        :filters="
-          vars
-            .find((el) => el.group === 'brand')
-            ?.variables.map((el) => el.title) || []
-        "
-      />
+      <slot></slot>
 
       <q-btn
         flat
@@ -51,22 +33,27 @@ try {
       </q-btn>
     </div>
   </app-modal>
+
+  <div v-else>
+    <slot></slot>
+  </div>
 </template>
 
 <style lang="scss">
 .filters__content {
   padding: 2.2rem 1.6rem;
+
   .filter-block__title {
-    font-size: 2rem !important;
+    font-size: 2rem ;
   }
 
   .filter-block__input {
-    width: 100% !important;
-    height: 7.2rem !important;
-    padding: 0 1.8rem !important;
+    width: 100%;
+    height: 7.2rem;
+    padding: 0 1.8rem;
 
     input {
-      font-size: 1.4rem !important;
+      font-size: 1.4rem;
     }
 
     svg {
@@ -76,15 +63,14 @@ try {
 
   .filter-block__filter {
     margin-top: 1.9rem;
-    .q-checkbox__label {
-      span {
-        font-size: 1.5rem !important;
-      }
+
+    .q-checkbox__label span {
+      font-size: 1.5rem;
     }
   }
 
   .filter-block__show {
-    font-size: 1.5rem !important;
+    font-size: 1.5rem;
   }
 }
 </style>

@@ -91,7 +91,7 @@ font-weight: 400;
 line-height: 22.5px;
 color: rgba(150, 150, 150, 1);
 ">
-        Зачислений еще нет 
+        Зачислений еще нет
       </div>
     </div>
   </div>

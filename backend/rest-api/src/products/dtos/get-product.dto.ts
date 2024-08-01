@@ -44,6 +44,9 @@ export class GetProductDTO {
   sizes?: string[];
 
   @IsOptional()
+  q?: string;
+
+  @IsOptional()
   @Transform(({ value }) => (value === 'true' ? true : false))
   @IsBoolean()
   @IsDefined()
