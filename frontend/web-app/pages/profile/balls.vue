@@ -4,43 +4,22 @@ definePageMeta({
   layout: 'profile'
 });
 
-const balls = ref(0);
-const history = ref([]);
-const promocode = ref("LSJ77U");
+const { $api } = useNuxtApp();
+const { data: result } = await $api.v1.profilesControllerGetScores();
 
-try {
-  const result = await $fetch<{
-    _id: string;
-    scores: {
-      quantity: number;
-      history: [];
-    };
-    promocode: string;
-  }>("https://api.3hundred.ru/v1/profile/scores", {
-    headers: {
-      Authorization: "Bearer " + useCookie("access_token").value,
-    },
-  });
-
-  promocode.value = result.promocode;
-  balls.value = result.scores.quantity;
-  history.value = result.scores.history;
-  if (result.promocode) {
-    promocode.value = result.promocode;
-  }
-} catch (err) {}
+const balls = ref(result.scores.quantity);
+const history = ref(result.scores.history);
+const promocode = ref(result.promocode);
 
 const { isMobile } = useDevice();
 </script>
 
 <template>
-  <app-container-info v-if="!isMobile" :quantity="''" :prefix="''">
+  <app-container-info v-if="!isMobile">
     <span style="font-weight: 500; font-size: 2rem;">Система баллов</span>
   </app-container-info>
 
-  <app-subheader-mobile v-else title="Система баллов">
-
-  </app-subheader-mobile>
+  <app-subheader-mobile v-else title="Система баллов"></app-subheader-mobile>
 
   <div class="container" :class="{'row': !isMobile}" style="margin-top: 2rem">
     <div :class="{'coll': !isMobile}">

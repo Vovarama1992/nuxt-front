@@ -54,26 +54,21 @@
 
 const route = useRoute();
 const currentPage = ref(parseInt(String(route.query.page || 1)))
-const { data, execute } = await useFetch<{
-  content: [];
-  props: {
-    total_items: number;
-    total_page: number;
-  };
-}>("https://api.3hundred.ru/v1/search/news", {
-  query: {
-    limit: 5,
-    page: currentPage,
-  },
-  server: false,
-  immediate: false,
-  watch: false,
-});
 const news = ref<any[][]>([]);
+
+const { $api } = useNuxtApp();
+const { data, execute } = useAsyncData(
+  'newsControllerGetAll',
+  () => $api.v1.newsControllerGetAll({ limit: 5, page: unref(currentPage) }),
+  {
+    immediate: false
+  }
+);
+
 await execute();
 
-if (data.value?.content) {
-  news.value.push(data.value?.content);
+if (data.value?.data.content) {
+  news.value.push(data.value?.data.content);
 }
 
 async function nextPage() {
@@ -87,8 +82,8 @@ async function nextPage() {
   });
   await execute();
 
-  if (data.value?.content) {
-    news.value.push(data.value?.content);
+  if (data.value?.data.content) {
+    news.value.push(data.value?.data.content);
   }
 }
 </script>
@@ -122,7 +117,7 @@ async function nextPage() {
     </template>
   </div>
 
-  <div style="padding: 1.8rem 1.6rem; padding-top: 0;" v-if="currentPage < data?.props.total_page">
+  <div style="padding: 1.8rem 1.6rem; padding-top: 0;" v-if="currentPage < (data?.data.total_pages || 0)">
     <ui-btn block dark style="font-size: 1.8rem; height: 7.2rem; border-radius: .8rem;" @click="nextPage">
       Больше материала
       <svg style="margin-left: 1rem;" width="1.7rem" height="1.4rem" viewBox="0 0 17 9" fill="none" xmlns="http://www.w3.org/2000/svg">

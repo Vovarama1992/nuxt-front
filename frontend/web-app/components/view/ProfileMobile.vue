@@ -4,20 +4,9 @@ import type { QImg } from "quasar";
 
 const balls = ref(0);
 
-try {
-  const result = await $fetch<{
-    _id: string;
-    scores: {
-      quantity: number;
-    };
-  }>("https://api.3hundred.ru/v1/profile/scores", {
-    headers: {
-      Authorization: "Bearer " + useCookie("access_token").value,
-    },
-  });
-
-  balls.value = result.scores.quantity;
-} catch (err) {}
+const { $api } = useNuxtApp();
+const { data } = await $api.v1.profilesControllerGetScores();
+balls.value = data.scores.quantity;
 
 const accessToken = useCookie("access_token");
 const profileId = useSelfProfileId();
@@ -27,8 +16,11 @@ const colorStop = ref<SVGStopElement>();
 const name = ref("");
 const image = ref<QImg>();
 
-const response = await $fetch<{name: string}>("https://api.3hundred.ru/v1/profile/info/name/" + profileId);
-name.value = response.name;
+if (profileId) {
+  const { data: response } = await $api.v1.profilesControllerGetName(profileId);
+  name.value = response.name;
+} else
+  navigateTo("/");
 
 async function colorize() {
   const unrefColorStop = unref(colorStop);

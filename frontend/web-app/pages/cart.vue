@@ -1,16 +1,6 @@
 <script setup lang="ts">
 const cart = useCartStore();
 const { isMobile } = useDevice();
-const { data } = await useFetch("https://api.3hundred.ru/v1/products", {
-  server: false,
-  method: "POST",
-  body: {
-    products: cart.$state.cart.map((el) => ({
-      _id: el.product_id,
-      size_id: el.size_id,
-    })),
-  },
-});
 </script>
 
 <template>

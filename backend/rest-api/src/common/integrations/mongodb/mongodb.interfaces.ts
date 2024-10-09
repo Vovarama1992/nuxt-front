@@ -1,10 +1,13 @@
 import { ObjectId } from 'mongodb';
+import { OrderStatus, SizeTableEnum, UserRoles } from 'src/common/utils/enums';
 
-export interface Variable {
-  _id: ObjectId;
-  group: string;
-  title: string;
+interface CartItem {
+  product_id: ObjectId;
+  size_id: ObjectId;
+  quantity: number;
 }
+
+type Cart = CartItem[];
 
 export interface Promocode {
   _id: ObjectId;
@@ -17,7 +20,7 @@ export interface Promocode {
 export interface Profile {
   _id: ObjectId;
   telegram_id: bigint;
-  role: string;
+  role: UserRoles;
   create_at: Date;
   phone_number: string;
   orders: ObjectId[];
@@ -33,26 +36,34 @@ export interface Profile {
       quantity: number;
     }[];
   };
-  cart: {
-    product_id: ObjectId;
-    size_id: ObjectId;
-    quantity: number;
-  }[];
+  cart: Cart;
   favourites: ObjectId[];
+}
+
+export interface Variable {
+  _id: ObjectId;
+  title: string;
+}
+
+export interface File {
+  _id: ObjectId;
+  hash: string;
+  mimetype: string;
+  available_sizes: SizeTableEnum[];
 }
 
 export interface Product {
   _id: ObjectId;
-  created_at: Date;
-  type: string;
-  brand: string;
   preview: string;
   preview_compress: string;
   title: string;
-  size_grid: string;
   discount: number;
   photos: string[];
   photos_compress: string[];
+  created_at: Date;
+  type: string;
+  brand: string;
+  size_grid: string;
   similar: ObjectId[];
 
   status: {
@@ -62,39 +73,20 @@ export interface Product {
     is_new: boolean;
   };
 
-  package: {
-    width: number;
-    height: number;
-    length: number;
-    weight: number;
-  };
-
   sizes: {
     _id: ObjectId;
     title: string;
     price: number;
     quantity: number;
   }[];
+
+  package: {
+    width: number;
+    height: number;
+    length: number;
+    weight: number;
+  };
 }
-
-// created - когда заказ только создается, еще не оплачен
-// rejected - отклонен по какой либо причине
-// paid - заказ оплачен и готов к оработе
-// completed - заказ завершен
-
-// На возврате / refaund
-// Возвращен / returned
-// Сейчас в пути /
-// Отменен
-// Доставлен
-
-// created / ждет оплаты
-// rejected / отменен
-// paid / оплачен
-// delivered / сейчас в пути
-// completed / Выполнен
-// refaund /  На возврате
-// returned / Возвращен
 
 export interface Collection {
   _id: ObjectId;
@@ -107,14 +99,7 @@ export interface Collection {
 export interface Order {
   _id: ObjectId;
   created_at: Date;
-  status:
-    | 'created'
-    | 'paid'
-    | 'on_its_way'
-    | 'completed'
-    | 'completed_refaund'
-    | 'rejected'
-    | 'refaund';
+  status: OrderStatus;
   comment?: string;
 
   total_amount: number;
@@ -123,11 +108,11 @@ export interface Order {
   history: {
     _id: ObjectId;
     created_at: Date;
-    status: string;
+    status: OrderStatus;
   }[];
 
   delivery_details: {
-    trak_number?: string;
+    tracking_code?: string;
     delivery_method: string;
   };
 
@@ -169,4 +154,16 @@ export interface Order {
       created_at: Date;
     }[];
   };
+}
+
+export interface News {
+  _id: ObjectId;
+  created_at: Date;
+  title: string;
+  subtitle: string;
+  text: string;
+  preview: string;
+  photos: string[];
+  to?: string;
+  button_label?: string;
 }

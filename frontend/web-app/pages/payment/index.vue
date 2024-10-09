@@ -27,43 +27,39 @@ const phoneNumber = ref('');
 const message = ref('');
 const promocode = ref('');
 
-const createOrder = async () => {
-  try {
-    const result = await $fetch('https://api.3hundred.ru/v1/order', {
-      method: 'post',
-      headers: {
-        Authorization: 'Bearer ' + useCookie('access_token').value,
-      },
-      body: {
-        first_name: firstName.value,
-        last_name: lastName.value,
-        postal_code: postalCode.value,
-        phone_number: phoneNumber.value,
-        pvz: pvz.value,
-        surname: surname.value,
-        delivery_address: {
-          city: deliveryMethod.value[0] === 'Экспресс-доставка по Москве' ? 'Экспресс-доставка по Москве' : city.value,
-          address: address.value,
-        },
-        promocode: promocode.value,
-        delivery_method: deliveryMethod.value[0],
-        products: cart.$state.cart.map((el) => ({
-          product_id: el.product_id,
-          size_id: el.size_id,
-          quantity: el.quantity,
-        }))
-      }
-    })
+const { $api } = useNuxtApp();
 
-    localStorage.setItem('cart', '[]');
-    cart.$state.cart = [];
-    navigateTo(`/payment/success/${result}`)
-  } catch (err: any) {
-    q.notify({
-      message: err.data.message || 'Возникла ошибка! Проверьте правильность заполнения полей или попробуйте собрать корзину заново',
+const createOrder = async () => {
+  const { data, error } = await $api.v1.orderControllerCreateOrder({
+    first_name: unref(firstName),
+    last_name: unref(lastName),
+    postal_code: unref(postalCode),
+    phone_number: unref(phoneNumber),
+    pvz: unref(pvz),
+    surname: unref(surname),
+    delivery_address: {
+      city: unref(deliveryMethod)[0] === 'Экспресс-доставка по Москве' ? 'Экспресс-доставка по Москве' : unref(city),
+      address: unref(address),
+    },
+    promocode: unref(promocode),
+    delivery_method: unref(deliveryMethod)[0],
+    products: cart.$state.cart.map((el) => ({
+      product_id: el.product_id,
+      size_id: el.size_id,
+      quantity: el.quantity,
+    })),
+    message: unref(message)
+  })
+
+  if (error)
+    return q.notify({
+      message: error.message || 'Возникла неизвестная ошибка! Проверьте заполненные поля или попробуйте собрать корзину заново.',
       color: 'danger'
-    })
-  }
+    });
+
+  localStorage.setItem('cart', '[]');
+  cart.$state.cart = [];
+  navigateTo(`/payment/success/${data._id}`)
 }
 </script>
 
@@ -73,33 +69,115 @@ const createOrder = async () => {
     <div class="page-container page-padding">
       <div class="payment">
         <div style="flex: 2.5">
-          <div
-            class="payment__form container"
-          >
+          <div class="payment__form container">
             <h2>Данные для заказа</h2>
 
             <div class="payment__form-fio">
               <div style="display: flex; gap: 0.6rem" class="a">
-                <div>
+                <div style="position: relative;">
                   <p>Фамилия</p>
                   <ui-input placeholder="Ваша фамилия" v-model.trim="lastName" />
+
+                  <!-- Кнопка очистки поверх кастомного крестика -->
+                  <button
+                    v-if="lastName"
+                    @click="lastName = ''"
+                    style="
+                      position: absolute;
+                      right: 1.5rem;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      width: 2rem;
+                      height: 5rem;
+                      z-index: 2;
+                      opacity: 0;
+                    "
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <div>
+                <div style="position: relative;">
                   <p>Имя</p>
                   <ui-input placeholder="Ваше имя" v-model.trim="firstName" />
+
+                  <!-- Кнопка очистки поверх кастомного крестика -->
+                  <button
+                    v-if="firstName"
+                    @click="firstName = ''"
+                    style="
+                      position: absolute;
+                      right: 1.5rem;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      width: 2rem;
+                      height: 4rem;
+                      z-index: 2;
+                      opacity: 0;
+                    "
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
 
               <div style="display: flex; gap: 0.6rem; margin-top: 1.2rem;" class="a">
-                <div style="width: 100%;">
+                <div style="width: 100%; position: relative;">
                   <p>Отчество*</p>
-                  <ui-input placeholder="Ваш отчество" v-model.trim="surname" />
+                  <ui-input placeholder="Ваше отчество" v-model.trim="surname" />
+
+                  <!-- Кнопка очистки поверх кастомного крестика -->
+                  <button
+                    v-if="surname"
+                    @click="surname = ''"
+                    style="
+                      position: absolute;
+                      right: 1.5rem;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      width: 2rem;
+                      height: 4rem;
+                      z-index: 2;
+                      opacity: 0;
+                    "
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <div style="width:100%;">
+                <div style="width:100%; position: relative;">
                   <p>Номер телефона</p>
                   <ui-input placeholder="Ваш номер телефона" v-model.trim="phoneNumber" />
+
+                  <!-- Кнопка очистки поверх кастомного крестика -->
+                  <button
+                    v-if="phoneNumber"
+                    @click="phoneNumber = ''"
+                    style="
+                      position: absolute;
+                      right: 1.5rem;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      width: 2rem;
+                      height: 4rem;
+                      z-index: 2;
+                      opacity: 0;
+                    "
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             </div>
@@ -124,31 +202,132 @@ const createOrder = async () => {
             </div>
 
             <div class="payment__form-fio">
-              <div v-if="deliveryMethod[0] !== deliveryMethods[0].val" style="margin-top: 1.2rem">
+              <div v-if="deliveryMethod[0] !== deliveryMethods[0].val" style="margin-top: 1.2rem; position: relative;">
                 <p>Город</p>
                 <ui-input placeholder="Ваш город" v-model.trim="city" />
+
+                <!-- Кнопка очистки поверх кастомного крестика -->
+                <button
+                  v-if="city"
+                  @click="city = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
-              <div v-if="deliveryMethod[0] !== 'СДЭК'" style="margin-top: 1.2rem">
+              <div v-if="deliveryMethod[0] !== 'СДЭК'" style="margin-top: 1.2rem; position: relative;">
                 <p>Адрес</p>
                 <ui-input placeholder="Ваш адрес" v-model.trim="address" />
+
+                <!-- Кнопка очистки поверх кастомного крестика -->
+                <button
+                  v-if="address"
+                  @click="address = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
-              <div v-if="deliveryMethod[0] === deliveryMethods[1].val" style="margin-top: 1.2rem">
+              <div v-if="deliveryMethod[0] === deliveryMethods[1].val" style="margin-top: 1.2rem; position: relative;">
                 <p>ПВЗ (адрес пункта выдачи ТК СДЕК)</p>
                 <ui-input placeholder="Нужный ПВЗ" v-model.trim="pvz" />
+
+                <!-- Кнопка очистки поверх кастомного крестика -->
+                <button
+                  v-if="pvz"
+                  @click="pvz = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
-              <div v-if="deliveryMethod[0] === deliveryMethods[2].val" style="margin-top: 1.2rem">
+              <div v-if="deliveryMethod[0] === deliveryMethods[2].val" style="margin-top: 1.2rem; position: relative;">
                 <p>Почтовый индекс</p>
                 <ui-input placeholder="Ваш почтовый индекс" v-model.trim="postalCode" />
+
+                <!-- Кнопка очистки поверх кастомного крестика -->
+                <button
+                  v-if="postalCode"
+                  @click="postalCode = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
-              <div style="margin-top: 1.2rem">
+              <div style="margin-top: 1.2rem; position: relative;">
                 <p>Комментарий</p>
                 <ui-input placeholder="Ваш комментарий (при необходимости)" v-model.trim="message" />
+
+                <!-- Кнопка очистки поверх кастомного крестика -->
+                <button
+                  v-if="message"
+                  @click="message = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
             </div>
-            <!-- <div class="payment__form-fio">
-              <p>Адрес доставки</p>
-              <app-address-picker />
-            </div> -->
 
             <div class="payment__form-fio">
               <ui-btn block dark @click="createOrder">
@@ -175,7 +354,7 @@ const createOrder = async () => {
                     margin-top: 1rem;
                   "
                   :_id="item.product_id"
-                  :discount="item.discount"
+                  :discount="item.discount || 0"
                   :preview="item.preview"
                   :price="item.price"
                   :size-grid="item.size_grid"
@@ -187,7 +366,7 @@ const createOrder = async () => {
 
             <div class="promocode" style="margin-top: 2.6rem">
               <h2>Промокод</h2>
-              <div style="display: flex; gap: 0.6rem; margin-top: 1.2rem">
+              <div style="display: flex; gap: 0.6rem; margin-top: 1.2rem; position: relative;">
                 <ui-input placeholder="При наличии" v-model.trim="promocode" />
                 <ui-btn class="promocode-btn">
                   <svg
@@ -205,6 +384,27 @@ const createOrder = async () => {
                     />
                   </svg>
                 </ui-btn>
+
+                <!-- Невидимая кнопка очистки размещена поверх кастомного крестика -->
+                <button
+                  v-if="promocode"
+                  @click="promocode = ''"
+                  style="
+                    position: absolute;
+                    right: 1.5rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    width: 2rem;
+                    height: 4rem;
+                    z-index: 2;
+                    opacity: 0;
+                  "
+                >
+                  ✕
+                </button>
               </div>
             </div>
 

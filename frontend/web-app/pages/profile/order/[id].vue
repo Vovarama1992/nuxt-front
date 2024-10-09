@@ -82,13 +82,10 @@ const statuses = [
 ];
 
 const route = useRoute();
-const productId = route.path.split("/").at(-1) as string;
+const productId = route.params.id as string;
 
-const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
-  headers: {
-    Authorization: "Bearer " + useCookie("access_token").value,
-  },
-});
+const { $api } = useNuxtApp();
+const { data: order } = await $api.v1.orderControllerGetOrder(productId);
 </script>
 
 <template>
@@ -113,33 +110,37 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
           color: black;
         "
         :style="{
-          background: statuses.find((el) => el.id === order[0].status)?.bg,
+          background: statuses.find((el) => el.id === order.status)?.bg,
           color: status === 'created' ? 'white' : 'black',
         }"
       >
         <div
-          v-html="statuses.find((el) => el.id === order[0].status)?.icon"
+          v-html="statuses.find((el) => el.id === order.status)?.icon"
           style="position: relative; top: 2px"
         ></div>
         <span style="margin-left: 1rem">{{
-          statuses.find((el) => el.id === order[0].status)?.title
+          statuses.find((el) => el.id === order.status)?.title
         }}</span>
       </div>
 
-      <div style="margin-top: 4rem;" v-if="order[0]?.statuses?.length">
+      <!--
+      TODO: fix CDEK on backend and implement DTO
+
+      <div style="margin-top: 4rem;" v-if="order?.statuses?.length">
         <app-cdek-line
-          :statuses="order[0]?.statuses"
+          :statuses="order?.statuses"
         />
       </div>
+      -->
 
       <div class="info">
         <span>Трек-номер:</span><br />
-        <span>{{ order[0]?.delivery_details?.trak_number || "Еще нет" }}</span>
+        <span>{{ order?.delivery_details?.tracking_code || "Еще нет" }}</span>
       </div>
 
       <div class="info" style="margin-top: 2rem">
         <span>Дата заказа:</span><br />
-        <span>{{ format(new Date(order[0].created_at)) }}</span>
+        <span>{{ format(new Date(order.created_at)) }}</span>
       </div>
     </div>
 
@@ -147,9 +148,9 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
       <div class="info" style="margin-top: 0">
         <span>Адрес доставки:</span><br />
         <span>{{
-          order[0].customer?.city +
+          order.customer?.city +
           ", " +
-          (order[0].customer?.address || order[0].customer?.pvz)
+          (order.customer?.address || order.customer?.pvz)
         }}</span>
       </div>
 
@@ -157,10 +158,10 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
         <span>ФИО Получателя:</span><br />
         <span>
           {{
-            order[0].customer?.last_name +
+            order.customer?.last_name +
             " " +
-            order[0].customer?.first_name +
-            order[0].customer?.surname
+            order.customer?.first_name +
+            order.customer?.surname
           }}
         </span>
       </div>
@@ -169,7 +170,7 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
         <span>Вес посылки:</span><br />
         <span
           >{{
-            order[0].items?.reduce((acc, el) => (acc += el.product.package.weight), 0) /
+            order.items?.reduce((acc, el) => (acc += el.product.package.weight), 0) /
             1000
           }}
           кг</span
@@ -178,7 +179,7 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
 
       <div class="info" style="margin-top: 2rem; padding-bottom: 3.5rem">
         <span>Состав заказа:</span><br />
-        <span>{{ order[0].items?.length }} предмет</span>
+        <span>{{ order.items?.length }} предмет</span>
       </div>
     </ui-accardion-fill>
 
@@ -195,8 +196,8 @@ const order = await $fetch("https://api.3hundred.ru/v1/order/" + productId, {
       >
         <!-- TODO: store discount >:o -->
         <app-product-card-fill
-          v-for="card in order[0].items"
-          :key="card.product._id"
+          v-for="card in order.items"
+          :key="card.product._id + card.size_id"
           :_id="card.product._id"
           :preview="card.product.preview"
           :price="card.size_price"

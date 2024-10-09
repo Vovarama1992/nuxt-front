@@ -3,6 +3,8 @@ import { ProfileIdentifier } from './interfaces/repository.interfaces';
 import { Collection, MongoClient, ObjectId, WithId } from 'mongodb';
 import { DB_CONNECTION } from 'src/common/integrations/mongodb/mongodb.service';
 import { Profile } from 'src/common/integrations/mongodb/mongodb.interfaces';
+import { UserRoles } from 'src/common/utils/enums';
+import { Profile as ProfileDTO } from 'src/profiles/dtos/profile.dto';
 
 @Injectable()
 export class RepositoryService {
@@ -16,7 +18,7 @@ export class RepositoryService {
 
   async findProfile(
     id: ProfileIdentifier,
-  ): Promise<{ _id: ObjectId; role: string }> {
+  ) {
     const arrSearch = [];
 
     if (id.phoneNumber) {
@@ -27,7 +29,7 @@ export class RepositoryService {
       arrSearch.push({ telegram_id: BigInt(id.telegramId) });
     }
 
-    const profile: WithId<{ _id: ObjectId; role: string }> =
+    const profile: WithId<ProfileDTO> =
       await this.Profiles.findOne(
         {
           $or: arrSearch,
@@ -57,13 +59,13 @@ export class RepositoryService {
 
   async createProfile(
     id: ProfileIdentifier,
-  ): Promise<{ _id: ObjectId; role: string }> {
+  ) {
     const { insertedId } = await this.Profiles.insertOne({
       _id: new ObjectId(),
       telegram_id: BigInt(id.telegramId) || null,
       create_at: new Date(),
       phone_number: id.phoneNumber || null,
-      role: 'user',
+      role: UserRoles.USER,
       addresses: [],
       promocode: this.generateRandomString(12),
       cart: [],
@@ -77,7 +79,7 @@ export class RepositoryService {
 
     return {
       _id: insertedId,
-      role: 'user',
+      role: UserRoles.USER,
     };
   }
 }

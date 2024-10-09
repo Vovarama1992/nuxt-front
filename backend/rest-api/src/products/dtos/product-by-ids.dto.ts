@@ -1,16 +1,8 @@
-import { IsArray, IsDefined } from 'class-validator';
-
-export class ProductByIdsDTO {
-  @IsArray()
-  @IsDefined()
-  products: {
-    _id: string;
-    size_id: string;
-  }[];
-}
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
 export class GetProductsGroupDTO {
-  @IsArray()
-  @IsDefined()
-  products_id: string[];
+  @ApiProperty({ type: String, isArray: true })
+  @IsString({ each: true }) // it wouldn't add anything to the dto if it wasn't for this
+  product_id: string[];
 }

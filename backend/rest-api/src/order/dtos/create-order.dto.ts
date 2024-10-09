@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDefined,
-  IsIn,
+  IsEnum,
   IsInt,
   IsMongoId,
   IsNumber,
@@ -16,6 +16,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ObjectId } from 'mongodb';
+import { DeliveryMethod } from 'src/common/utils/enums';
 class ProductDTO2 {
   @IsMongoId()
   product_id: string;
@@ -93,11 +94,8 @@ export class CreateOrderDTO {
 
   @IsDefined()
   @IsString()
-  @IsIn(['Экспресс-доставка по Москве', 'СДЭК', 'Доставка Почтой России'])
-  delivery_method:
-    | 'Экспресс-доставка по Москве'
-    | 'СДЭК'
-    | 'Доставка Почтой России';
+  @IsEnum(DeliveryMethod)
+  delivery_method: DeliveryMethod;
 
   @IsOptional()
   @IsString()

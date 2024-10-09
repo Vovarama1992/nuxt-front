@@ -34,13 +34,20 @@ export class ClientBotService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN_CLIENT;
+
+    if (!botToken) {
+      console.log(
+        'Telegram Bot token is missing. Skipping Telegram bot initialization.',
+      );
+      return;
+    }
+
     const redisInstance = new IORedis(process.env.REDIS_URL);
     const storage = new RedisAdapter<any>({ instance: redisInstance });
     this.serviceAPI = new ServiceAPI();
     this.telegramAPI = new TelegramAPI();
-    this.bot = new Bot<ParseModeFlavor<IAppContext>>(
-      process.env.TELEGRAM_BOT_TOKEN_CLIENT,
-    );
+    this.bot = new Bot<ParseModeFlavor<IAppContext>>(botToken);
 
     this.bot.use(
       session({
@@ -75,15 +82,12 @@ export class ClientBotService implements OnApplicationBootstrap {
 
   async getFileURL(file_id: string) {
     const { file_path } = await this.bot.api.getFile(file_id);
-    if (!file_path)
-      throw new Error("couldn't get file_path for given file_id");
+    if (!file_path) throw new Error("couldn't get file_path for given file_id");
     return `https://api.telegram.org/file/bot${this.bot.token}/${file_path}`;
   }
 
   private async init() {
-    this.commands = [
-      new StartCommand(this.bot, this.serviceAPI)
-    ];
+    this.commands = [new StartCommand(this.bot, this.serviceAPI)];
 
     for (const command of this.commands)
       this.bot.command(command.name, command.handle);

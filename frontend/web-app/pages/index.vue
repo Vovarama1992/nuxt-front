@@ -1,7 +1,6 @@
 <script setup lang="ts">
-const { data } = await useFetch<any[]>(
-  "https://api.3hundred.ru/v1/products/collections"
-);
+const { $api } = useNuxtApp();
+const { data } = await $api.v1.productsControllerGetCollections();
 
 const banners = [
   resolveComponent('app-baner-original'),
@@ -42,7 +41,7 @@ const banners = [
               :is-sale="card.status.is_sale"
               :photos="card.photos_compress"
               :preview="card.preview_compress || card.preview"
-              :price="card.price"
+              :price="card.min_price"
             />
           </div>
 

@@ -12,3 +12,8 @@ export class VerifyDTO {
   @IsPhoneNumber('RU')
   phone_number?: string;
 }
+
+export class VerifyResponseDTO {
+  @ApiProperty()
+  access_token: string;
+}

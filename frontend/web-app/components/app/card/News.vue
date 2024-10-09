@@ -6,7 +6,7 @@ const props = defineProps<{
   title: string;
 }>();
 
-function formatDate(date) {
+function formatDate(date: Date) {
   const formatter = new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",
     month: "long",
@@ -26,7 +26,7 @@ function formatDate(date) {
 
 <template>
   <div class="news-card" @click="navigateTo('/news/'+_id)">
-    <img :src="`https://api.3hundred.ru/${preview}`" :alt="title" />
+    <img :src="useCDN(preview)" :alt="title" />
 
     <div class="news-card__caption">
       <p

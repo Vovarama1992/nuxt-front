@@ -12,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
+import { DashboardProductsService } from './products.service';
 import { CreateProductDTO } from './dtos/create-product.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -21,10 +21,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProductDTO } from './dtos/update-product.dto';
 import { ObjectId } from 'mongodb';
 import { CreateSizeDTO } from './dtos/create-size.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Dashboard Products')
 @Controller('dashboard/products')
-export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+export class DashboardProductsController {
+  constructor(private readonly productsService: DashboardProductsService) {}
 
   @UseGuards(RolesGuard)
   @Roles('admin')

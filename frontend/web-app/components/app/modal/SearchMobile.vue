@@ -12,21 +12,14 @@ const onFocused = () => {
   }
 };
 
-const { data, execute } = useFetch<{
-  content: any[];
-  props: {
-    total_items: number;
-    total_page: number;
-  };
-}>("https://api.3hundred.ru/v1/search", {
-  query: {
-    text,
-    page: 1,
-    limit: 4,
-  },
-  immediate: false,
-  watch: false,
-});
+const { $api } = useNuxtApp();
+const { data, execute } = useAsyncData(
+  'productsControllerGetProducts',
+  () => $api.v1.productsControllerGetProducts({ q: unref(text), limit: 5, page: 1 }),
+  {
+    immediate: false
+  }
+);
 
 let timeout: NodeJS.Timeout | undefined;
 watch(text, () => {
@@ -104,7 +97,7 @@ await execute();
 
       <div class="search__items">
         <app-product-card
-          v-for="card in data?.content"
+          v-for="card in data?.data.content"
           :key="card._id"
           :_id="card._id"
           :title="card.title"
@@ -114,11 +107,11 @@ await execute();
           :is-sale="card.status.is_sale"
           :photos="card.photos_compress"
           :preview="card.preview_compress || card.preview"
-          :price="card.price"
+          :price="card.min_price"
         />
       </div>
 
-      <template v-if="data?.content.length">
+      <template v-if="data?.data.content.length">
         <p
           style="
             font-size: 1.4rem;
@@ -128,7 +121,7 @@ await execute();
             margin-bottom: 2.5rem;
           "
         >
-          Найдено {{ data?.props.total_items }} результатов
+          Найдено {{ data?.data.total_items }} результатов
         </p>
 
         <div style="padding: 1.5rem 1.6rem; padding-top:0">

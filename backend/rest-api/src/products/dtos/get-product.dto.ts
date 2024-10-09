@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
@@ -7,60 +8,89 @@ import {
   IsOptional,
   Min,
 } from 'class-validator';
+import { PaginationDTO, PaginationResponseDTO } from 'src/common/utils/paginate';
+import { PartialProductResponseDTO } from './product.dto';
 
-export class GetProductDTO {
+export class GetProductDTO extends PaginationDTO {
+  @ApiProperty({
+    type: Number,
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => +value)
   @IsNumber()
   @IsInt()
   @Min(0)
   max_price?: number;
 
+  @ApiProperty({
+    type: Number,
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => +value)
   @IsNumber()
   @IsInt()
   @Min(0)
   min_price?: number;
 
-  @IsOptional()
-  @Transform(({ value }) => {
-    console.log(value);
-    return value?.split(';') || [];
+  @ApiProperty({
+    type: [ String ],
+    required: false
   })
-  type?: string[];
-
   @IsOptional()
-  @Transform(({ value }) => {
-    console.log(value);
-    return value?.split(';') || [];
-  })
-  brand?: string[];
+  type?: string[] | string;
 
+  @ApiProperty({
+    type: [ String ],
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value?.split(';') || [];
-  })
-  sizes?: string[];
+  brand?: string[] | string;
 
+  @ApiProperty({
+    type: [ String ],
+    required: false
+  })
+  @IsOptional()
+  sizes?: string[] | string;
+
+  @ApiProperty({
+    type: String,
+    required: false
+  })
   @IsOptional()
   q?: string;
 
+  @ApiProperty({
+    type: Boolean,
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? true : false))
   @IsBoolean()
   @IsDefined()
   is_new?: boolean;
 
+  @ApiProperty({
+    type: Boolean,
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? true : false))
   @IsBoolean()
   @IsDefined()
   is_sale?: boolean;
 
+  @ApiProperty({
+    type: Boolean,
+    required: false
+  })
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? true : false))
   @IsBoolean()
   @IsDefined()
   in_stock?: boolean;
+}
+
+export class GetProductsResponseDTO extends PaginationResponseDTO {
+  @ApiProperty({ type: [ PartialProductResponseDTO ] })
+  content: PartialProductResponseDTO[];
 }

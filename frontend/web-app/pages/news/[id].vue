@@ -1,16 +1,8 @@
 <script setup lang="ts">
 const route = useRoute();
 
-const result = await $fetch<{
-  title: string;
-  subtitle: string;
-  preview: string;
-  created_at: string;
-  photos: string[];
-  text: string;
-  to: string;
-  btnTitle: string;
-}>("https://api.3hundred.ru/v1/search/news/" + route.path.split("/").at(-1));
+const { $api } = useNuxtApp();
+const { data: result } = await $api.v1.newsControllerGet(route.params.id as string);
 
 function formatDate(date: any) {
   const formatter = new Intl.DateTimeFormat("ru-RU", {
@@ -31,7 +23,7 @@ function formatDate(date: any) {
 
 const textBlocks = result.text.split("{{image}}");
 
-const { isMobile} = useDevice();
+const { isMobile } = useDevice();
 </script>
 
 <template>
@@ -42,7 +34,7 @@ const { isMobile} = useDevice();
   
       <img
         class="post__preview"
-        :src="'https://api.3hundred.ru/' + result.preview"
+        :src="useCDN(result.preview)"
         :alt="result.title"
       />
   
@@ -54,7 +46,7 @@ const { isMobile} = useDevice();
         <img
           v-if="result.photos.length"
           class="post__preview"
-          :src="'https://api.3hundred.ru/' + result.photos[i]"
+          :src="useCDN(result.photos[i])"
         />
       </template>
   
@@ -75,10 +67,10 @@ const { isMobile} = useDevice();
             text-transform: none;
           "
           flat
-          v-if="result.btnTitle && result.to"
+          v-if="result.button_label && result.to"
           @click="navigateTo(result.to, { external: true })"
         >
-          {{ result.btnTitle }}
+          {{ result.button_label }}
         </q-btn>
       </div>
     </div>

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
@@ -13,28 +14,32 @@ import {
 } from '@nestjs/common';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { CreateOrderDTO } from './dtos/create-order.dto';
 import { ProfilesService } from './profiles.service';
 import { ObjectId } from 'mongodb';
-import { CreateAddressDTO } from './dtos/create-address.dto';
-import { CreateCardItemDTO } from './dtos/create-cart-item.dto';
-import { DeleteCartItem } from './dtos/delete-cart-item.dto';
-import { UpdateCartItem } from './dtos/update-cart-item.dto';
-import { CreateFavoriteDTO } from './dtos/create-favorite.dto';
+import { AddressDTO, AddressesDTO } from './dtos/address.dto';
+import { CartItemDTO, DeleteCartItem, GetCartResponseDTO, UpdateCartItem } from './dtos/cart.dto';
+import { ApiOkResponse, ApiProduces, ApiTags } from '@nestjs/swagger';
+import { GetNameResponseDTO } from './dtos/get-name.dto';
+import { CreateFavoriteDTO, FavoritesResponseDTO } from './dtos/favorites.dto';
+import { PartialDocumentDTO } from 'src/common/utils/default';
+import { ScoresResponseDTO } from './dtos/scores.dto';
 
+@ApiTags('Profile')
 @Controller('profile')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
+  @ApiOkResponse({ type: GetCartResponseDTO })
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Get('cart')
-  async getCart(@Req() req) {
-    return await this.profilesService.getCart(
+  getCart(@Req() req) {
+    return this.profilesService.getCart(
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({ type: GetNameResponseDTO })
   @Get('info/name/:id')
   async getName(@Param('id') id: string) {
     const name = await this.profilesService.getName(new ObjectId(id));
@@ -45,6 +50,13 @@ export class ProfilesController {
     return { name };
   }
 
+  @ApiOkResponse({
+    schema: {
+      type: 'string',
+      format: 'binary'
+    }
+  })
+  @ApiProduces('image/jpeg')
   @Get('info/avatar/:id')
   async getAvatar(@Param('id') id: string) {
     const buffer = await this.profilesService.getAvatar(new ObjectId(id));
@@ -57,126 +69,98 @@ export class ProfilesController {
     });
   }
 
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Post('cart')
-  async createCartItem(@Body() dto: CreateCardItemDTO, @Req() req) {
-    return await this.profilesService.createCartItem(
+  createCartItem(@Body() dto: CartItemDTO, @Req() req) {
+    return this.profilesService.createCartItem(
       dto,
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Delete('cart')
-  async deleteCartItem(@Body() dto: DeleteCartItem, @Req() req) {
-    return await this.profilesService.deleteCartItem(
+  deleteCartItem(@Body() dto: DeleteCartItem, @Req() req) {
+    return this.profilesService.deleteCartItem(
       dto,
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Patch('cart')
-  async updateCartItem(@Body() dto: UpdateCartItem, @Req() req) {
-    return await this.profilesService.updateCartItem(
+  updateCartItem(@Body() dto: UpdateCartItem, @Req() req) {
+    return this.profilesService.updateCartItem(
       dto,
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({ type: FavoritesResponseDTO })
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Get('favorites')
-  async getFavorites(@Req() req) {
-    return await this.profilesService.getFavorites(
+  getFavorites(@Req() req) {
+    return this.profilesService.getFavorites(
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Post('favorites')
-  async createFavorites(@Body() dto: CreateFavoriteDTO, @Req() req) {
-    return await this.profilesService.createFavorites(
+  createFavorites(@Body() dto: CreateFavoriteDTO, @Req() req) {
+    return this.profilesService.createFavorites(
       new ObjectId(dto.product_id),
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Delete('favorites')
-  async deleteFavorites(@Body() dto: CreateFavoriteDTO, @Req() req) {
-    return await this.profilesService.deleteFavorites(
+  deleteFavorites(@Body() dto: CreateFavoriteDTO, @Req() req) {
+    return this.profilesService.deleteFavorites(
       new ObjectId(dto.product_id),
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({ type: ScoresResponseDTO })
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Get('scores')
-  async getScores(@Req() req) {
-    return await this.profilesService.getScores(
+  getScores(@Req() req) {
+    return this.profilesService.getScores(
       new ObjectId(req.profile.profileId),
     );
   }
 
-  @Roles('user', 'admin')
-  @UseGuards(RolesGuard)
-  @Get('scores-history')
-  async getScoresHistory(@Req() req) {
-    return await this.profilesService.getScores(
-      new ObjectId(req.profile.profileId),
-    );
-  }
-
-  @Roles('user', 'admin')
-  @UseGuards(RolesGuard)
-  @Post('order')
-  async createOrder(@Body() dto: CreateOrderDTO, @Req() req) {
-    await this.profilesService.createOrder(
-      dto,
-      new ObjectId(req?.profile.profileId),
-    );
-  }
-
+  @ApiOkResponse({})
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
   @Post('address')
-  async createAddress(@Body() dto: CreateAddressDTO, @Req() req) {
-    await this.profilesService.createAddress(
+  createAddress(@Body() dto: AddressDTO, @Req() req) {
+    return this.profilesService.createAddress(
       dto,
       new ObjectId(req?.profile.profileId),
     );
   }
 
+  @ApiOkResponse({ type: AddressesDTO })
   @Roles('user', 'admin')
   @UseGuards(RolesGuard)
-  @Get('addresses')
-  async getAddresses(@Req() req) {
-    return await this.profilesService.getAddresses(
-      new ObjectId(req?.profile.profileId),
-    );
-  }
-
-  @Roles('user', 'admin')
-  @UseGuards(RolesGuard)
-  @Get('orders')
-  async getOrders(@Req() req) {
-    return await this.profilesService.getOrders(
-      new ObjectId(req?.profile.profileId),
-    );
-  }
-
-  @Roles('user', 'admin')
-  @UseGuards(RolesGuard)
-  @Get('order')
-  async getOrder(@Req() req) {
-    return await this.profilesService.getOrder(
+  @Get('address')
+  getAddresses(@Req() req) {
+    return this.profilesService.getAddresses(
       new ObjectId(req?.profile.profileId),
     );
   }

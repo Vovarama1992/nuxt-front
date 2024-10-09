@@ -12,7 +12,7 @@ defineProps<{
 <template>
   <div class="product-card-compact">
     <div class="product-card-compact__preview">
-      <img :src="`https://api.3hundred.ru/${preview}`" :alt="title">
+      <img :src="useCDN(preview)" :alt="title">
     </div>
 
     <div class="product-card-compact__info">

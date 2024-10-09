@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { getProducts } from "~/api/api";
-
 const $q = useQuasar();
 const columns = [
   {
@@ -35,31 +33,27 @@ const columns = [
   },
 ];
 
-let products: any;
+const products = ref<object[]>([]);
 
 const pagination = ref({ rowsPerPage: 600 });
 
 const onRowClick = async (
-  event: MouseEvent,
+  event: Event,
   row: Record<string, unknown>,
   index: number
 ) => {
   await navigateTo("/products/" + row._id);
 };
 
+const { $api } = useNuxtApp();
+
 const send = async () => {
-  const { data, error } = await getProducts(1, 600);
-
-  if (error.value) {
-    $q.notify({
-      type: error.value ? "negative" : "positive",
-      message: error.value ? "Не удалось создать заказ" : "товар создан",
-    });
-  }
-
-  products = computed(() => {
-    return data.value || [];
+  const { data } = await $api.v1.dashboardProductsControllerGetProducts({
+    limit: 600,
+    page: 1
   });
+
+  products.value = data;
 };
 
 await send();

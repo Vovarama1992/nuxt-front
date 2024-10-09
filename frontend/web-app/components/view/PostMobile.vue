@@ -1,16 +1,8 @@
 <script setup lang="ts">
 const route = useRoute();
 
-const result = await $fetch<{
-  title: string;
-  subtitle: string;
-  preview: string;
-  created_at: string;
-  photos: string[];
-  text: string;
-  to: string;
-  btnTitle: string;
-}>('https://api.3hundred.ru/v1/search/news/' + route.path.split('/').at(-1));
+const { $api } = useNuxtApp();
+const { data: result } = await $api.v1.newsControllerGet(route.params.id as string);
 
 function formatDate(date: any) {
   const formatter = new Intl.DateTimeFormat("ru-RU", {
@@ -33,7 +25,7 @@ const textBlocks = result.text.split("{{image}}");
 </script>
 
 <template>
-  <img class="post__preview" :src="'https://api.3hundred.ru/' + result.preview" :alt="result.title" />
+  <img class="post__preview" :src="useCDN(result.preview)" :alt="result.title" />
 
   <h1 class="post__title">{{ result.title }}</h1>
   <p class="post__date">{{ formatDate(new Date(result.created_at)) }}</p>
@@ -43,7 +35,7 @@ const textBlocks = result.text.split("{{image}}");
   <template v-for="(block, i) in textBlocks">
     <p class="post__text" v-html="block"></p>
 
-    <img v-if="result.photos.length" class="post__preview" :src="'https://api.3hundred.ru/' + result.photos[i]" />
+    <img v-if="result.photos.length" class="post__preview" :src="useCDN(result.photos[i])" />
   </template>
 
   <div style="display: flex; justify-content: center; padding: 0 1.1rem;">
@@ -62,10 +54,10 @@ const textBlocks = result.text.split("{{image}}");
           text-transform: none;
         "
         flat
-        v-if="result.btnTitle && result.to"
+        v-if="result.button_label && result.to"
         @click="navigateTo(result.to, { external: true })"
       >
-        {{ result.btnTitle }}
+        {{ result.button_label }}
       </q-btn>
     </div>
 </template>

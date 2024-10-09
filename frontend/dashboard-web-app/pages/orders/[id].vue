@@ -116,7 +116,7 @@ await send();
 </script>
 
 <template>
-  <q-page style="width: min(840px, 100%); margin: auto; padding: 3rem 0">
+  <q-page padding class="container">
     <p class="text-h4 q-pb-lg">ID: {{ productId }}</p>
 
     <div style="display: flex; flex-direction: column; margin-bottom: 4rem">

@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "@3hundred/dashboard",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@3hundred/api": "file:../api",
     "@quasar/extras": "^1.16.11",
     "@vue/runtime-dom": "^3.4.23",
     "mobile-detect": "^1.4.5",

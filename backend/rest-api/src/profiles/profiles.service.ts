@@ -6,11 +6,8 @@ import {
   Profile,
 } from 'src/common/integrations/mongodb/mongodb.interfaces';
 import { DB_CONNECTION } from 'src/common/integrations/mongodb/mongodb.service';
-import { CreateOrderDTO } from './dtos/create-order.dto';
-import { CreateAddressDTO } from './dtos/create-address.dto';
-import { CreateCardItemDTO } from './dtos/create-cart-item.dto';
-import { DeleteCartItem } from './dtos/delete-cart-item.dto';
-import { UpdateCartItem } from './dtos/update-cart-item.dto';
+import { AddressDTO } from './dtos/address.dto';
+import { CartItemDTO, DeleteCartItem, UpdateCartItem } from './dtos/cart.dto';
 import { ClientBotService } from 'src/client-bot/client-bot.service';
 import { InlineKeyboard } from 'grammy';
 
@@ -37,167 +34,6 @@ export class ProfilesService {
     this.Profiles = mongodbService.db('3hundred').collection('profiles');
     this.Orders = mongodbService.db('3hundred').collection('orders');
     this.Products = mongodbService.db('3hundred').collection('products');
-  }
-
-  async createOrder(dto: CreateOrderDTO, profileId: ObjectId) {
-    const filterCriteria = dto.items.reduce((acc, product) => {
-      if (!acc[product.product_id]) {
-        acc[product.product_id] = [];
-      }
-      acc[product.product_id].push(new ObjectId(product.size_id));
-      return acc;
-    }, {});
-
-    const items = await this.Products.find(
-      {
-        _id: {
-          $in: Object.keys(filterCriteria).map((id) => new ObjectId(id)),
-        },
-      } as UpdateFilter<Product>,
-      {
-        projection: {
-          _id: 1,
-          discount: 1,
-          title: 1,
-          size_grid: 1,
-          sizes: {
-            $filter: {
-              input: '$sizes',
-              as: 'size',
-              cond: {
-                $in: [
-                  '$$size._id',
-                  { $literal: [].concat(...Object.values(filterCriteria)) },
-                ],
-              },
-            },
-          },
-        },
-      },
-    ).toArray();
-
-    const itmemss = [];
-
-    dto.items.forEach((el) => {
-      const product = items.find((i) => i._id.toString() === el.product_id);
-
-      if (!product)
-        throw new BadRequestException(
-          'Не удалось найти товар: ' + el.product_id,
-        );
-
-      const size = product.sizes.find((i) => i._id.toString() === el.size_id);
-      if (!size)
-        throw new BadRequestException('Не удалось найти размер: ' + el.size_id);
-
-      if (el.quantity > size.quantity)
-        throw new BadRequestException('Доступно товара: ' + size.quantity);
-
-      itmemss.push({
-        product_id: product._id,
-        product_title: product.title,
-        size_grid: product.size_grid,
-        size_id: size._id,
-        size_title: size.title,
-        price: size.price,
-        quantity: el.quantity,
-      });
-    });
-
-    if (itmemss.length === 0) {
-      throw new BadRequestException('Ваша корзина пуста!');
-    }
-
-    let textOrder = '';
-    itmemss.forEach(async (el) => {
-      textOrder += '—*' + el.product_title + '*\n';
-      textOrder +=
-        el.size_title + ' ' + el.size_grid + ' x ' + el.quantity + '\n\n';
-
-      await this.Products.updateOne(
-        { _id: el.product_id },
-        {
-          $inc: {
-            'sizes.$[elem].quantity': -el.quantity,
-          },
-        },
-        { arrayFilters: [{ 'elem._id': el.size_id }] },
-      );
-    });
-
-    const orderID = new ObjectId();
-    // await this.Orders.insertOne({
-    //   _id: orderID,
-    //   created_at: new Date(),
-    //   status: 'created',
-    //   comment: dto.message || null,
-
-    //   customer: {
-    //     city: dto.city,
-    //     address: dto.address,
-    //     first_name: dto.first_name,
-    //     last_name: dto.last_name,
-    //     surname: dto.surname || null,
-    //     profile_id: profileId,
-    //   },
-
-    //   delivery_details: {
-    //     delivery_method: dto.delivery_method,
-    //   },
-
-    //   payment_details: {
-    //     promo_code: dto.promo_code || null,
-    //     amount: itmemss.reduce((acc, el) => (acc += el.price * el.quantity), 0),
-    //   },
-
-    //   items: itmemss,
-
-    //   history: [],
-
-    //   chat: {
-    //     message_quantity: 0,
-    //     messages: [],
-    //   },
-    // });
-
-    const profile = await this.Profiles.findOne(
-      { _id: profileId },
-      {
-        projection: {
-          _id: 0,
-          telegram_id: 1,
-        },
-      },
-    );
-
-    await this.Profiles.updateOne(
-      { _id: profileId },
-      {
-        $set: {
-          cart: [],
-        },
-      },
-    );
-
-    await this.clientBotService.getBot().api.sendMessage(
-      profile.telegram_id.toString(),
-      `
-🎊 Ваш заказ успешно сформирован!
-
-❗️ Чтобы оплатить заказ вам надо связаться с менеджером и предоставить идентификатор заказа
-
-*ID Заказа*: \`${orderID.toString()}\`
-
-${textOrder}
-Итоговая цена — ${usePriceFormat(itmemss.reduce((acc, el) => (acc += el.price * el.quantity), 0))}
-    `,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: InlineKeyboard.from([
-          [InlineKeyboard.url('Менеджер', 'https://t.me/noflours1')],
-        ]),
-      },
-    );
   }
 
   async getName(id: ObjectId) {
@@ -282,7 +118,7 @@ ${textOrder}
     );
   }
 
-  async createAddress(dto: CreateAddressDTO, profileId: ObjectId) {
+  async createAddress(dto: AddressDTO, profileId: ObjectId) {
     await this.Profiles.updateOne(
       { _id: profileId },
       {
@@ -307,7 +143,7 @@ ${textOrder}
     );
   }
 
-  async createCartItem(dto: CreateCardItemDTO, profileId: ObjectId) {
+  async createCartItem(dto: CartItemDTO, profileId: ObjectId) {
     await this.Profiles.updateOne(
       { _id: profileId },
       {
@@ -367,7 +203,7 @@ ${textOrder}
   }
 
   async createFavorites(productId: ObjectId, profileId: ObjectId) {
-    return await this.Profiles.updateOne(
+    await this.Profiles.updateOne(
       { _id: profileId },
       {
         $push: {
@@ -378,7 +214,7 @@ ${textOrder}
   }
 
   async deleteFavorites(productId: ObjectId, profileId: ObjectId) {
-    return await this.Profiles.updateOne(
+    await this.Profiles.updateOne(
       { _id: profileId },
       {
         $pull: {
@@ -394,19 +230,7 @@ ${textOrder}
       {
         projection: {
           promocode: 1,
-          'scores.quantity': 1,
-        },
-      },
-    );
-  }
-
-  async getScoresHistory(profileId: ObjectId) {
-    return await this.Profiles.findOne(
-      { _id: profileId },
-      {
-        projection: {
           scores: 1,
-          promocode: 1,
         },
       },
     );

@@ -2,17 +2,17 @@
 type Cards = {
   _id: string,
   preview: string,
-  preview_compress: null,
+  preview_compress: string,
   title: string,
-  discount: 30,
+  discount: number,
   photos: string[],
   photos_compress: string[],
   status: {
-      "in_stock": boolean,
-      "is_sale": boolean,
-      "is_new": boolean
+    in_stock: boolean,
+    is_sale: boolean,
+    is_new: boolean
   },
-  price: 1,
+  min_price: number,
 }[]
 
 const { isMobile } = useDevice();
@@ -20,16 +20,15 @@ const favorites = useFavoritesStore();
 const cards = ref<Cards>([]);
 provide('cards', cards);
 
+const { $api } = useNuxtApp();
+
 onMounted(async () => {
-  if (process.client) {
-    const result = await $fetch<Cards>("https://api.3hundred.ru/v1/products/group", {
-      method: "post",
-      body: {
-        products_id: favorites.$state.favorites,
-      },
+  if (import.meta.client) {
+    const { data } = await $api.v1.productsControllerGetProductsGroup({
+      product_id: favorites.$state.favorites
     });
 
-    cards.value = result;
+    cards.value = data;
   }
 });
 </script>
@@ -63,7 +62,7 @@ onMounted(async () => {
           :is-sale="card.status.is_sale"
           :photos="card.photos"
           :preview="card.preview"
-          :price="card.price"
+          :price="card.min_price"
         />
       </div>
     </div>

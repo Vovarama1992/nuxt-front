@@ -18,6 +18,7 @@ import { ProductsCreateCommand } from './commands/products-create.command';
 import {
   Product,
   Collection as Coll,
+  File,
 } from 'src/common/integrations/mongodb/mongodb.interfaces';
 import { SizeCreateCommand } from './commands/size-create.command';
 import { createSizeScene } from './scenes/create-size.scene';
@@ -37,6 +38,7 @@ import { DescriptionProductCommand } from './commands/products/product-descripti
 
 @Injectable()
 export class StaffBotService implements OnApplicationBootstrap {
+  private Files: Collection<File>;
   private Products: Collection<Product>;
   private Collections: Collection<Coll>;
   private commands: Command[] = [];
@@ -50,19 +52,24 @@ export class StaffBotService implements OnApplicationBootstrap {
   ) {
     this.Products = mongodbService.db('3hundred').collection('products');
     this.Collections = mongodbService.db('3hundred').collection('collections');
+    this.Files = mongodbService.db('3hundred').collection('files');
   }
 
   async onApplicationBootstrap() {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+    if (!botToken) {
+      console.log(
+        'Telegram Bot token is missing in StaffBotService. Skipping Telegram bot initialization.',
+      );
+      return;
+    }
+
     const redisInstance = new IORedis(process.env.REDIS_URL);
     const storage = new RedisAdapter({ instance: redisInstance });
     this.serviceAPI = new ServiceAPI();
     this.telegramAPI = new TelegramAPI();
-    this.bot = new Bot<ParseModeFlavor<IAppContext>>(
-      process.env.TELEGRAM_BOT_TOKEN,
-    );
-
-    // this.bot.api.getUserProfilePhotos()
-    // this.bot.api.getChat
+    this.bot = new Bot<ParseModeFlavor<IAppContext>>(botToken);
 
     this.bot.use(auth);
     this.bot.use(
@@ -78,7 +85,7 @@ export class StaffBotService implements OnApplicationBootstrap {
     this.bot.use(conversations());
     this.bot.use(
       createConversation(
-        createProductScene(this.Products),
+        createProductScene(this.Products, this.Files),
         'create-product-scene',
       ),
       createConversation(createSizeScene(this.Products), 'create-size-scene'),
@@ -135,5 +142,6 @@ export class StaffBotService implements OnApplicationBootstrap {
     }
 
     this.bot.start();
+    console.log(await (this.bot as any).mePromise);
   }
 }

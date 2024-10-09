@@ -6,3 +6,8 @@ export class SignInDTO {
   @IsPhoneNumber('RU')
   phone_number: string;
 }
+
+export class SignInResponseDTO {
+  @ApiProperty()
+  message: string;
+}

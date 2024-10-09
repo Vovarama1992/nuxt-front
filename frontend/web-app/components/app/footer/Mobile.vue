@@ -95,20 +95,6 @@ const links = ref([
     last: true,
   },
 ]);
-
-try {
-  const vars: any = await $fetch("https://api.3hundred.ru/v1/products/vars");
-  const brands = vars.find((el: any) => el.group === "brand");
-  const listBrands = links.value.find((el) => el.title === "Бренды");
-  
-  if (listBrands) {
-    listBrands.content = brands.variables.map((el: any) => ({
-      title: el.title,
-      to: `/catalog?brand=${el.title}`,
-    }));
-  }
-} catch (err) {}
-
 </script>
 
 <template>
@@ -194,7 +180,7 @@ try {
         "
         to="/"
       >
-        © 3HUNDRED, 2024
+        © ИП Сологуб Богдан Николаевич, 2024. ИНН: 290409479508. ОГРНИП: 324290000027588.
       </p>
     </div>
   </footer>

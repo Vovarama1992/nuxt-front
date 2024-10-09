@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { IPorductCardStroke } from "~/api/types";
-
 const cart = useCartStore();
 
 const totalPrice = ref(0);
@@ -21,7 +19,7 @@ const totalPrice = ref(0);
       :size-id="size.size_id"
       style="padding: 0; border: 0; min-height: 10.6rem"
       :_id="size.product_id"
-      :discount="size.discount"
+      :discount="size.discount || 0"
       :preview="size.preview"
       :price="size.price"
       :size-grid="size.size_grid"

@@ -24,7 +24,7 @@ const slide = ref(0);
           :name="i"
           class="slide"
         >
-          <ui-zoom :src="'https://api.3hundred.ru/' + img"></ui-zoom>
+          <ui-zoom :src="useCDN(img)"></ui-zoom>
         </q-carousel-slide>
       </q-carousel>
 
@@ -80,7 +80,7 @@ const slide = ref(0);
         <q-img
           v-for="(img, i) in images"
           :key="img"
-          :src="'https://api.3hundred.ru/' + img"
+          :src="useCDN(img)"
           :ratio="16 / 9"
           :style="slide === i ? { opacity: 1 } : { opacity: 0.5 }"
           @click="() => (slide = i)"

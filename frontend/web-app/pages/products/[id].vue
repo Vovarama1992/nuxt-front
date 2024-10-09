@@ -2,19 +2,23 @@
 const route = useRoute();
 const cart = useCartStore();
 const favorites = useFavoritesStore();
-const productId = route.path.split("/").at(-1) as string;
+const productId = route.params.id as string;
 
-const { data, status, error, refresh } = await useFetch<any>(
-  `https://api.3hundred.ru/v1/products/${productId}`
-);
+const { $api } = useNuxtApp();
+
+const { data } = await $api.v1.productsControllerGetProduct(productId);
 
 // TODO: types
-const currentSize = ref<any>(data.value.sizes[0] || {});
-const discountSum = ref((currentSize.value.price / 100) * data.value.discount);
+const currentSize = ref<any>(data.sizes[0] || {});
+const discountSum = ref((currentSize.value.price / 100) * data.discount);
 
-const cards = await useFetch<any>(
-  `https://api.3hundred.ru/v1/products/page/1?brand=${data.value.brand}&type=${data.value.type}`
-);
+const { data: cards } = await $api.v1.productsControllerGetProducts({
+  page: 1,
+  limit: 5,
+  brand: [ data.brand ],
+  type: [ data.type ]
+});
+
 const { isMobile } = useDevice();
 
 function addQuantity() {
@@ -212,8 +216,8 @@ const sortedSizeArray = computed(() => {
             "
           >
             <app-product-card
-              v-if="cards.data.value[0].data"
-              v-for="card in cards.data.value[0].data.slice(0, 10)"
+              v-if="!!cards.content.length"
+              v-for="card in cards.content.slice(0, 10)"
               :key="card._id"
               :_id="card._id"
               :title="card.title"
@@ -223,7 +227,7 @@ const sortedSizeArray = computed(() => {
               :is-sale="card.status.is_sale"
               :photos="card.photos"
               :preview="card.preview"
-              :price="card.price"
+              :price="card.min_price"
             />
           </div>
           <div style="display: flex; gap: .8rem; margin-top: 2.4rem;">

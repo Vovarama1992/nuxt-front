@@ -15,6 +15,7 @@ export class StartCommand extends Command {
 
   handle(): void {
     this.bot.command('start', async (ctx) => {
+      console.log('FUCK');
       return await ctx.replyWithHTML(
         `Здравствуйте, ${getProfileName(ctx.from)}!`,
         {

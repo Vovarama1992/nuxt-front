@@ -3,3 +3,4 @@ backend/rest-api/dist
 backend/rest-api/node_modules
 backend/rest-api/build
 backend/rest-api/logs/*
+uploads/

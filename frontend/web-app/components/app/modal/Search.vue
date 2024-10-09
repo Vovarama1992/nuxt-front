@@ -13,21 +13,18 @@ const onFocused = () => {
   }
 };
 
-const { data, execute } = useFetch<{
-  content: any[];
-  props: {
-    total_items: number;
-    total_page: number;
-  };
-}>("https://api.3hundred.ru/v1/search", {
-  query: {
-    text,
-    page: 1,
-    limit: 5,
-  },
-  immediate: false,
-  watch: false,
-});
+const clearSearch = () => {
+  text.value = "";
+};
+
+const { $api } = useNuxtApp();
+const { data, execute } = useAsyncData(
+  'productsControllerGetProducts',
+  () => $api.v1.productsControllerGetProducts({ q: unref(text), limit: 5, page: 1 }),
+  {
+    immediate: false
+  }
+);
 
 let timeout: NodeJS.Timeout | undefined;
 watch(text, () => {
@@ -45,39 +42,58 @@ const { isMobile } = useDevice();
     <div class="modal-search-desktop__modal">
       <div style="width: 100%">
         <div class="modal-search-desktop__modal__header">
-          <div style="position: relative; width: 100%">
-            <svg
-              style="
-                top: 0px;
-                bottom: 0;
-                left: 2rem;
-                z-index: 1;
-                margin: auto;
-                position: absolute;
-              "
-              width="1.2rem"
-              viewBox="0 0 25 25"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M18.9573 18.9573L23 23M21.8333 11.9502C21.8333 17.4455 17.3935 21.9004 11.9167 21.9004C6.43984 21.9004 2 17.4455 2 11.9502C2 6.45486 6.43984 2 11.9167 2C17.3935 2 21.8333 6.45486 21.8333 11.9502Z"
-                stroke="black"
-                stroke-width="2.3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+          <div style="position: relative; width: 100%;">
+  <svg
+    style="
+      top: 0;
+      bottom: 0;
+      left: 2rem;
+      z-index: 1;
+      margin: auto;
+      position: absolute;
+    "
+    width="1.2rem"
+    viewBox="0 0 25 25"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M18.9573 18.9573L23 23M21.8333 11.9502C21.8333 17.4455 17.3935 21.9004 11.9167 21.9004C6.43984 21.9004 2 17.4455 2 11.9502C2 6.45486 6.43984 2 11.9167 2C17.3935 2 21.8333 6.45486 21.8333 11.9502Z"
+      stroke="black"
+      stroke-width="2.3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
 
-            <ui-input
-              class="text-field-3"
-              style="width: 100%"
-              v-model.trim="text"
-              @focus="onFocused"
-              placeholder="Искать в каталоге"
-            />
-          </div>
+  <ui-input
+    class="text-field-3"
+    style="width: 100%; padding-left: 4rem;"
+    v-model.trim="text"
+    @focus="onFocused"
+    placeholder="Искать в каталоге"
+  />
 
+  <!-- Невидимая кнопка очистки поверх кастомного крестика -->
+  <button
+    v-if="text"
+    @click="text = ''"
+    style="
+      position: absolute;
+      right: 2.5rem; /* Смещение к кастомному крестику */
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      opacity: 0; /* Полная прозрачность */
+      width: 1.2rem; /* Размер как у кастомного крестика */
+      height: 1.2rem;
+    "
+  >
+    ✕
+  </button>
+</div>
           <div
             style="width: 8.8rem; min-width: 8.8rem"
             class="row justofy-center"
@@ -119,7 +135,7 @@ const { isMobile } = useDevice();
 
         <div class="modal-search-desktop__items">
           <app-product-card
-            v-for="card in data?.content"
+            v-for="card in data?.data.content"
             :key="card._id"
             :_id="card._id"
             :title="card.title"
@@ -129,11 +145,11 @@ const { isMobile } = useDevice();
             :is-sale="card.status.is_sale"
             :photos="card.photos_compress"
             :preview="card.preview_compress || card.preview"
-            :price="card.price"
+            :price="card.min_price"
           />
         </div>
         <p
-          v-if="!(data?.content.length)"
+          v-if="!(data?.data.content.length)"
           style="
             margin-bottom: 10rem;
             margin-top: 1rem;
@@ -162,7 +178,7 @@ const { isMobile } = useDevice();
               margin-bottom: 0 !important;
             "
           >
-            Найдено {{ data?.props.total_items }} результатов
+            Найдено {{ data?.data.total_pages }} результатов
           </p>
           <ui-btn block dark style="width: 36rem"
             @click="navigateTo({

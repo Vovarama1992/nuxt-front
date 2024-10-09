@@ -4,17 +4,14 @@ definePageMeta({
   layout: 'profile'
 });
 
-const orders = await $fetch<any>("https://api.3hundred.ru/v1/profile/orders", {
-  headers: {
-    Authorization: "Bearer " + useCookie("access_token").value,
-  },
-});
+const { $api } = useNuxtApp();
+const { data: orders } = await $api.v1.orderControllerGetAll();
 
 const count = ref(0);
 
 for (const { status } of orders) {
   console.log(status)
-  if (status != 'refaund' && status !='completed_refaund') {
+  if (status != 'refund' && status != 'refund_complete') {
     count.value += 1;
   }
 }
@@ -32,12 +29,12 @@ const { isMobile } = useDevice();
         style="margin-bottom: 1.2rem;"
         v-if="!['refaund', 'completed_refaund'].includes(order?.status)"
         :status="order.status"
-        :trakNumber="order.delivery_details?.trak_number"
+        :trakNumber="order.delivery_details?.tracking_code"
         :orderId="order._id"
-        :previews="order.items.map((el) => el.preview)"
+        :previews="order.items.map((el) => el.product.preview)"
         :price="order.total_amount_promocode || order.total_amount"
         :count="order.items.length"
-        :weight="order.items.reduce((acc, el) => acc += el.package.weight, 0) / 1000"
+        :weight="order.items.reduce((acc, el) => acc += el.product.package.weight, 0) / 1000"
       />
     </template>
   </template>

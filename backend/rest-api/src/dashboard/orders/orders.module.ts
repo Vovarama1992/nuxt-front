@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { OrdersController } from './orders.controller';
-import { OrdersService } from './orders.service';
+import { DashboardOrdersController } from './orders.controller';
+import { DashboardOrdersService } from './orders.service';
 import { databaseProvider } from 'src/common/integrations/mongodb/mongodb.service';
 
 @Module({
-  controllers: [OrdersController],
-  providers: [OrdersService, databaseProvider],
+  controllers: [DashboardOrdersController],
+  providers: [DashboardOrdersService, databaseProvider],
 })
-export class OrdersModule {}
+export class DashboardOrdersModule {}

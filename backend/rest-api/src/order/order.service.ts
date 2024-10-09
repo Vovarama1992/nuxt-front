@@ -15,6 +15,7 @@ import { DB_CONNECTION } from 'src/common/integrations/mongodb/mongodb.service';
 import { CreateOrderDTO, ProductDTO } from './dtos/create-order.dto';
 import { ClientBotService } from 'src/client-bot/client-bot.service';
 import { InlineKeyboard } from 'grammy';
+import { OrderStatus } from 'src/common/utils/enums';
 
 const { format } = new Intl.NumberFormat('ru', {
   style: 'currency',
@@ -79,6 +80,82 @@ export class OrderService {
     return promocode;
   }
 
+  async getAll(profileId: ObjectId) {
+    return await this.Orders.aggregate([
+      { $match: { 'customer.profile_id': profileId } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product_id',
+          foreignField: '_id',
+          as: 'productDetails',
+        },
+      },
+      { $unwind: '$items' },
+      { $unwind: '$productDetails' },
+      {
+        $match: {
+          $expr: {
+            $eq: [
+              '$items.product_id',
+              '$productDetails._id'
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          payment_details: {
+            $first: '$payment_details'
+          },
+          total_amount: {
+            $first: '$total_amount'
+          },
+          chat: {
+            $first: '$chat'
+          },
+          created_at: {
+            $first: '$created_at'
+          },
+          comment: {
+            $first: '$comment'
+          },
+          delivery_details: {
+            $first: '$delivery_details'
+          },
+          history: {
+            $first: '$history'
+          },
+          items: {
+            $push: {
+              product_id: '$items.product_id',
+              product_title: '$items.product_title',
+              product_type: '$items.product_type',
+              product_brand: '$items.product_brand',
+              product_size_grid:
+                '$items.product_size_grid',
+              size_id: '$items.size_id',
+              size_title: '$items.size_title',
+              size_price: '$items.size_price',
+              quantity: '$items.quantity',
+              product: '$productDetails'
+            }
+          },
+          total_amount_promocode: {
+            $first: '$total_amount_promocode'
+          },
+          customer: {
+            $first: '$customer'
+          },
+          status: {
+            $first: '$status'
+          }
+        }
+      }
+    ]).toArray();
+  }
+
   // Проверить товар [+ / -]
   // Зарезирвировать товар [+]
   // Проверить промокод
@@ -86,7 +163,7 @@ export class OrderService {
   // очистить корзину
   // оповестить польщователя
   // оповестить админа
-  async creteOrder(profileId: ObjectId, dto: CreateOrderDTO) {
+  async createOrder(profileId: ObjectId, dto: CreateOrderDTO) {
     const foundProducts = await this.checkProductsInOrder(dto);
     await this.reservation(foundProducts, dto);
     const promocode = dto.promocode
@@ -164,7 +241,7 @@ export class OrderService {
         promo_code: dto.promocode,
       },
       comment: dto.message,
-      status: 'created',
+      status: OrderStatus.CREATED,
       items: items,
       chat: {
         message_quantity: 0,
@@ -256,8 +333,12 @@ export class OrderService {
           items: { $push: '$items' }
         },
       },
-    ]).toArray();
-    if (order[0].delivery_details?.trak_number) {
+    ]).toArray()[0];
+
+    if (!order)
+      return null;
+
+    if (order.delivery_details?.trak_number) {
       try {
         const result = await fetch('https://www.cdek.ru/api-site/v1/graphql/', {
           headers: {
@@ -268,7 +349,7 @@ export class OrderService {
             query:
               '\nquery getTrackingInfo(\n  $trackId: String!\n  $phone: String\n  $locale: String!\n  $token: String\n) {\n  tracking: trackingInfo(\n    trackId: $trackId\n    phone: $phone\n    locale: $locale\n    token: $token\n  ) {\n    success\n    orderNumber\n    status {\n      code\n      name\n      note\n      date\n    }\n    statuses {\n      code\n      name\n      note\n      date\n      completed\n      items {\n        code\n        name\n        statuses {\n            code\n            name\n            date\n        }\n      }\n    }\n    cityFrom {\n      code\n      name\n    }\n    cityTo {\n      code\n      name\n    }\n    orderDate\n    tariffDateEnd\n    storageDateEnd\n    deliveryAgreementDate\n    returnOrderNumber\n    weight\n    stockType\n    receiver {\n        initials\n        address {\n            title\n            city {\n                code\n                name\n            }\n            office {\n                systemName\n                type\n                worktime\n                notes\n            }\n        }\n    }\n    notes {\n        code\n        name\n    }\n    nonDeliveryNote {\n        code\n        name\n    }\n    errors {\n      message\n      code\n    }\n    specialNote\n    canBeReturned\n  }\n}\n',
             variables: {
-              trackId: order[0].delivery_details?.trak_number,
+              trackId: order.delivery_details?.trak_number,
               locale: 'ru',
               token: null,
             },
@@ -278,7 +359,7 @@ export class OrderService {
           }),
         });
         const json = await result.json();
-        order[0]['statuses'] = json.data.tracking.statuses;
+        order.statuses = json.data.tracking.statuses;
       } catch (err) {}
     }
 

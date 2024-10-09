@@ -4,12 +4,17 @@ export default defineNuxtConfig({
     enabled: false
   },
 
+  api: {
+    base: 'http://localhost:8080'
+  },
+
   modules: [
     "@vueuse/nuxt",
     "nuxt-quasar-ui",
     "@nuxtjs/device",
     "@wgr-sa/nuxt-panzoom",
     "@pinia/nuxt",
+    "@3hundred/api"
   ],
 
   panzoom: {

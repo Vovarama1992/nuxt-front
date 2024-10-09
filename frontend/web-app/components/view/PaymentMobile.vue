@@ -20,37 +20,34 @@ const postalCode = ref("");
 const pvz = ref("");
 const phoneNumber = ref("");
 
+const { $api } = useNuxtApp();
+
 const createOrder = async () => {
   try {
-    const result = await $fetch("https://api.3hundred.ru/v1/order", {
-      method: "post",
-      headers: {
-        Authorization: "Bearer " + useCookie("access_token").value,
+    const { data } = await $api.v1.orderControllerCreateOrder({
+      first_name: unref(firstName),
+      surname: unref(surname),
+      last_name: unref(lastName),
+      phone_number: unref(phoneNumber),
+      pvz: unref(pvz),
+      postal_code: unref(postalCode),
+      delivery_address: {
+        city: unref(deliveryMethod)[0] === 'Экспресс-доставка по Москве' ? 'Экспресс-доставка по Москве' : city.value,
+        address: address.value,
       },
-      body: {
-        first_name: firstName.value,
-        last_name: lastName.value,
-        postal_code: postalCode.value,
-        phone_number: phoneNumber.value,
-        pvz: pvz.value,
-        surname: surname.value,
-        delivery_address: {
-          city: deliveryMethod.value[0] === 'Экспресс-доставка по Москве' ? 'Экспресс-доставка по Москве' : city.value,
-          address: address.value,
-        },
-        promocode: promocode.value,
-        delivery_method: deliveryMethod.value[0],
-        products: cart.$state.cart.map((el) => ({
-          product_id: el.product_id,
-          size_id: el.size_id,
-          quantity: el.quantity,
-        })),
-      },
+      promocode: unref(promocode),
+      delivery_method: unref(deliveryMethod)[0],
+      products: cart.$state.cart.map((el) => ({
+        product_id: el.product_id,
+        size_id: el.size_id,
+        quantity: el.quantity,
+      })),
+      message: unref(message)
     });
 
     localStorage.setItem("cart", "[]");
     cart.$state.cart = [];
-    navigateTo(`/payment/success/${result}`);
+    navigateTo(`/payment/success/${data._id}`);
   } catch (err: any) {
     q.notify({
       message:

@@ -68,8 +68,13 @@ const profileId = useSelfProfileId();
 const name = ref("");
 const image = ref<HTMLImageElement>();
 
-const response = await $fetch<{name: string}>("https://api.3hundred.ru/v1/profile/info/name/" + profileId);
-name.value = response.name;
+const { $api } = useNuxtApp();
+
+if (profileId) {
+  const { data: response } = await $api.v1.profilesControllerGetName(profileId);
+  name.value = response.name;
+} else
+  navigateTo("/");
 
 onMounted(() => {
   const unrefImage = unref(image);

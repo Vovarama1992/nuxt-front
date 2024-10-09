@@ -10,7 +10,7 @@ import { UpdateProductDTO } from './dtos/update-product.dto';
 import { CreateSizeDTO } from './dtos/create-size.dto';
 
 @Injectable()
-export class ProductsService {
+export class DashboardProductsService {
   private Products: Collection<Product>;
 
   constructor(

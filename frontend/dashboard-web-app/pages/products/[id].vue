@@ -68,7 +68,7 @@ try {
 </script>
 
 <template>
-  <q-page padding class="product-add__page">
+  <q-page padding class="container">
     <p class="text-h4 q-pb-lg">Карточка товара</p>
 
     <div style="display: flex; flex-direction: column; margin-bottom: 4rem">
@@ -300,11 +300,6 @@ try {
 
 <style scoped lang="scss">
 .product-add {
-  &__page {
-    width: min(840px, 100%);
-    margin: auto;
-  }
-
   &__input {
     margin-bottom: 20px;
   }

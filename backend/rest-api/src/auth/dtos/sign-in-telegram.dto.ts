@@ -7,3 +7,8 @@ export class SignInTelegramDTO {
   @IsNumber()
   telegram_id: number;
 }
+
+export class SignInTelegramResponseDTO {
+  @ApiProperty()
+  code: string;
+}

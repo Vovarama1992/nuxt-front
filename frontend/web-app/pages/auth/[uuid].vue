@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { verify } from "~/api/api";
+const { $api } = useNuxtApp();
 
 const route = useRoute();
-const { data } = await verify(route.path.split("/").at(-1) || "");
+const { data } = await $api.v1.authControllerVerify({
+  code: route.params.uuid as string
+});
 const accessToken = useCookie("access_token");
 
-if (data.value?.access_token) {
-  accessToken.value = data.value?.access_token;
-}
+if (data && data.access_token)
+  accessToken.value = data.access_token;
 
 await navigateTo("/profile");
 </script>

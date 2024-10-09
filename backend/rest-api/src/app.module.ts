@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
@@ -10,6 +10,8 @@ import { ProductsModule } from './products/products.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { StaffBotModule } from './staff-bot/staff-bot.module';
 import { OrderModule } from './order/order.module';
+import { FilesModule } from './files/files.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -23,13 +25,15 @@ import { OrderModule } from './order/order.module';
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'static'),
-      exclude: ['/v1/(.*)'],
+      rootPath: join(__dirname, '..', '..', '..', 'static'),
+      serveRoot: '/static'
     }),
     ProductsModule,
     ProfilesModule,
     StaffBotModule,
     OrderModule,
+    FilesModule,
+    NewsModule
   ],
   controllers: [],
 })

@@ -131,7 +131,7 @@ const statuses = [
         :style="isMobile ? 'height: 19.3rem' : 'height: 30rem'"
         v-for="preview in previews.splice(0, 3)"
         :key="preview"
-        :src="`https://api.3hundred.ru/` + preview"
+        :src="useCDN(preview)"
       />
     </div>
 

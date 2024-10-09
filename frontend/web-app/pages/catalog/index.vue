@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { LocationQueryValue } from 'vue-router';
+
 const route = useRoute();
 const router = useRouter();
 
@@ -36,58 +38,47 @@ interface Filters {
   price: { min: number, max: number };
 }
 
-const typeFilters = ref<string[]>(
-  (route.query.type as string || "")
-    .split(";")
-    .filter(x => !!x.trim().length)
-);
+const priceOuterRange = ref({ min: 1000, max: 250000 });
 
-const brandFilters = ref<string[]>(
-  (route.query.brand as string || "")
-    .split(";")
-    .filter(x => !!x.trim().length)
-);
-
-const sizeFilters = ref<string[]>(
-  (route.query.sizes as string || "")
-    .split(";")
-    .filter(x => !!x.trim().length)
-);
-
-function computeURL(baseURL: string, page = false) {
-  return function() {
-    const u = new URL(baseURL);
-
-    if (page)
-      u.pathname += "/" + (route.query.page || "1");
-
-    if (route.query.q)
-      u.searchParams.append("q", route.query.q.toString());
-    if (route.query.min_price)
-      u.searchParams.append("min_price", route.query.min_price.toString());
-    if (route.query.max_price)
-      u.searchParams.append("max_price", route.query.max_price.toString());
-    if (route.query.type)
-      u.searchParams.append("type", route.query.type.toString());
-    if (route.query.brand)
-      u.searchParams.append("brand", route.query.brand.toString());
-    if (route.query.sizes)
-      u.searchParams.append("sizes", route.query.sizes.toString());
-
-    return u.toString();
-  }
+const normalizeQuery = (value: LocationQueryValue | LocationQueryValue[]): string[] => {
+  if (Array.isArray(value)) return value as string[];
+  if (value === null || value === undefined) return [];
+  return [ value ];
 }
 
-const { data } = await useFetch<Product[]>(
-  computed(computeURL("https://api.3hundred.ru/v1/products/page", true))
+const typeFilters = ref<string[]>(normalizeQuery(route.query.type));
+const brandFilters = ref<string[]>(normalizeQuery(route.query.brand));
+const sizeFilters = ref<string[]>(normalizeQuery(route.query.sizes));
+
+// can't use references defined directly, otherwise we would be fetching stuff two times
+const fetchOptions = computed(() =>
+  ({
+    limit: 30,
+    page: Number(route.query.page || '1'),
+    q: String(route.query.q || ''),
+    min_price: route.query.min_price !== undefined ? Number(route.query.min_price) : undefined,
+    max_price: route.query.max_price !== undefined ? Number(route.query.max_price) : undefined,
+    type: normalizeQuery(route.query.type),
+    brand: normalizeQuery(route.query.brand),
+    sizes: normalizeQuery(route.query.sizes)
+  })
 );
 
-const { data: filters } = await useFetch<Filters>(
-  computed(computeURL("https://api.3hundred.ru/v1/products/filters"))
+const { $api } = useNuxtApp();
+const { data } = await useAsyncData(
+  async () =>
+    (await $api.v1.productsControllerGetProducts(unref(fetchOptions))).data,
+  { watch: [fetchOptions] }
+);
+const { data: filters } = await useAsyncData(
+  async () =>
+    (await $api.v1.productsControllerGetFilters(unref(fetchOptions))).data,
+  { watch: [fetchOptions] }
 );
 
 const unrefFilters = unref(filters);
-const priceOuterRange = ref(unrefFilters?.price || { min: 1000, max: 250000 });
+if (unrefFilters)
+  priceOuterRange.value = unrefFilters.price;
 const priceRange = ref({
   min: !route.query.min_price || isNaN(+route.query.min_price) ?
     unref(priceOuterRange).min :
@@ -102,9 +93,9 @@ watch([typeFilters, brandFilters, priceRange, sizeFilters], async (old, newV) =>
   const q: any = { page: 1 };
   cards.value = [];
 
-  q.type = typeFilters.value.join(";");
-  q.brand = brandFilters.value.join(";");
-  q.sizes = sizeFilters.value.join(";");
+  q.type = typeFilters.value;
+  q.brand = brandFilters.value;
+  q.sizes = sizeFilters.value;
 
   const { min, max } = unref(priceRange);
   q.min_price = min;
@@ -119,12 +110,12 @@ watch([typeFilters, brandFilters, priceRange, sizeFilters], async (old, newV) =>
 const sizes = ref<Filter[]>([]);
 
 const IT_SIZE_ARRAY = [ "XS", "S", "M", "L", "XL", "XXL", "XXXL" ];
-const setFilters = (filters: Filters | null) => {
-  if (!filters) return;
+const setFilters = (data: any) => {
+  if (!data) return;
 
-  priceOuterRange.value = filters.price;
+  priceOuterRange.value = data.price;
 
-  sizes.value = [...filters.sizes].sort((a, b) => {
+  sizes.value = [...data.sizes].sort((a, b) => {
     if (IT_SIZE_ARRAY.includes(a._id.trim()) && IT_SIZE_ARRAY.includes(b._id.trim()))
       return IT_SIZE_ARRAY.indexOf(a._id.trim()) - IT_SIZE_ARRAY.indexOf(b._id.trim())
     else
@@ -137,8 +128,9 @@ if (unrefFilters)
 watch(filters, setFilters);
 
 watch(data, () => {
-  if (data.value)
-    cards.value = [...cards.value, ...data.value[0].data];
+  const response = unref(data);
+  if (response)
+    cards.value = [...cards.value, ...response.content];
 });
 
 const filterDialog = ref(false);
@@ -156,11 +148,11 @@ const cards = ref<
       in_stock: boolean;
       is_sale: boolean;
       is_new: boolean;
-      price: boolean;
+      is_hidden: boolean;
     };
-    price: number;
+    min_price: number;
   }[]
->(data.value ? data.value[0].data : []);
+>(data.value ? data.value.content : []);
 </script>
 
 <template>
@@ -277,7 +269,7 @@ const cards = ref<
             >Найдено
             {{
               data
-                ? usePriceFormat(data[0].total_count[0]?.count || 0).split(
+                ? usePriceFormat(data.total_items || 0).split(
                     ","
                   )[0]
                 : 0
@@ -331,7 +323,7 @@ const cards = ref<
               :is-sale="card.status.is_sale"
               :photos="card.photos_compress || card.photos"
               :preview="card.preview_compress || card.preview"
-              :price="card.price"
+              :price="card.min_price"
             />
           </template>
         </div>
@@ -367,7 +359,7 @@ const cards = ref<
             "
             v-if="
               parseInt(route.query.page?.toString() || '1') <
-              Math.ceil((data ? data[0].total_count[0]?.count || 0 : 0) / 40)
+              Math.ceil((data ? data.total_items || 0 : 0) / 40)
             "
           >
             Показать еще

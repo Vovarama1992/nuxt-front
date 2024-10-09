@@ -16,7 +16,7 @@ const discountSum = ref((props.price / 100) * props.discount);
 <template>
   <div class="product-card-fill">
     <div>
-      <ui-img-fill style="height: 26.5rem;" :src="`https://api.3hundred.ru/${preview}`"/>
+      <ui-img-fill style="height: 26.5rem;" :src="useCDN(preview)"/>
       <p class="product-card-fill__title">
         {{ title }}
       </p>

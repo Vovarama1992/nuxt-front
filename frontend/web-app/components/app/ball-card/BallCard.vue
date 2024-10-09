@@ -1,20 +1,10 @@
 <script setup lang="ts">
 const balls = ref(0);
 
-try {
-  const result = await $fetch<{
-    _id: string;
-    scores: {
-      quantity: number;
-    };
-  }>('https://api.3hundred.ru/v1/profile/scores', {
-    headers: {
-      Authorization: 'Bearer ' + useCookie('access_token').value,
-    },
-  });
+const { $api } = useNuxtApp();
+const { data } = await $api.v1.profilesControllerGetScores();
+balls.value = data.scores.quantity;
 
-  balls.value = result.scores.quantity;
-} catch (err) {}
 </script>
 
 <template>

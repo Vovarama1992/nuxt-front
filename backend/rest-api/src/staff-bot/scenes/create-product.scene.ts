@@ -3,14 +3,17 @@ import { TelegramAPI } from '../api/telegram.api';
 import { AppConversation, IAppContext } from '../context/context.interface';
 import { writeFile } from 'fs/promises';
 import { Collection, ObjectId } from 'mongodb';
-import { Product } from 'src/common/integrations/mongodb/mongodb.interfaces';
-import sharp from 'sharp';
+import { File, Product } from 'src/common/integrations/mongodb/mongodb.interfaces';
+import { hashPath } from 'src/common/services/files';
+import { xxh3 } from '@node-rs/xxhash';
 
-export const createProductScene = (products: Collection<Product>) => {
+export const createProductScene = (products: Collection<Product>, files: Collection<File>) => {
   let fullPhotos = [];
   let compressPhotos = [];
 
   return async function (conversation: AppConversation, ctx: IAppContext) {
+    const { fileTypeFromBuffer } = await import('file-type/core');
+
     await ctx.reply('Введите тип товара (Кроссовки)');
     const typeTitle = await conversation.waitFor('message:text');
 
@@ -108,25 +111,20 @@ export const createProductScene = (products: Collection<Product>) => {
         compressfile_id = full.file_id;
 
         try {
-          const metadata = await sharp(buffer).metadata();
-          await sharp(buffer)
-            .resize({
-              width: +((metadata?.width || 0) / 2).toFixed(0) || 300,
-              height: +((metadata?.height || 0) / 2).toFixed(0) || 300,
-            })
-            .toFile(
-              join(
-                __dirname,
-                '..',
-                '..',
-                '..',
-                '..',
-                'static',
-                '2__' + fullURI.split('/').at(-1),
-              ),
-            );
+          const nodeJSBuffer = Buffer.from(buffer);
+          const { mime } = await fileTypeFromBuffer(nodeJSBuffer);
+          const hash = xxh3.xxh128(nodeJSBuffer).toString(16);
+          const path = hashPath(hash);
 
-          compressPreviewName = '2__' + fullURI.split('/').at(-1);
+          await writeFile(join(path, 'original'), nodeJSBuffer);
+          const document = await files.insertOne({
+            _id: new ObjectId(),
+            hash,
+            mimetype: mime,
+            available_sizes: []
+          });
+
+          compressPhotos.push(document.insertedId);
         } catch (err) {
           console.log(err);
           await ctx.reply('Ошибка при сжатии');
@@ -171,25 +169,20 @@ export const createProductScene = (products: Collection<Product>) => {
         fullPhotos.push(fullURI.split('/').at(-1));
 
         try {
-          const metadata = await sharp(buffer).metadata();
-          sharp(buffer)
-            .resize({
-              width: +((metadata?.width || 0) / 2).toFixed(0) || 300,
-              height: +((metadata?.height || 0) / 2).toFixed(0) || 300,
-            })
-            .toFile(
-              join(
-                __dirname,
-                '..',
-                '..',
-                '..',
-                '..',
-                'static',
-                '2__' + fullURI.split('/').at(-1),
-              ),
-            );
+          const nodeJSBuffer = Buffer.from(buffer);
+          const { mime } = await fileTypeFromBuffer(nodeJSBuffer);
+          const hash = xxh3.xxh128(nodeJSBuffer).toString(16);
+          const path = hashPath(hash);
 
-          compressPhotos.push('2__' + fullURI.split('/').at(-1));
+          await writeFile(join(path, 'original'), nodeJSBuffer);
+          const document = await files.insertOne({
+            _id: new ObjectId(),
+            hash,
+            mimetype: mime,
+            available_sizes: []
+          });
+
+          compressPhotos.push(document.insertedId);
         } catch (err) {
           await ctx.reply('Ошибка при сжатии');
           return;
