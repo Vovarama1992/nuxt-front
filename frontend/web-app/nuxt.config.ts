@@ -8,6 +8,10 @@ export default defineNuxtConfig({
     base: 'http://localhost:8080'
   },
 
+  alias: {
+    '@3hundred/api': '/home/project/mobile-client/frontend/api/src'
+  },
+
   modules: [
     "@vueuse/nuxt",
     "nuxt-quasar-ui",
